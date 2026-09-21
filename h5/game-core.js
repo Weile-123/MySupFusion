@@ -1,16 +1,19 @@
-/* 《我的球星融合系统》初版规则与状态。数值为游戏设计值，并非真实 NBA 统计。 */
+/* 《我的球星融合系统》第二版规则与状态。数值为游戏设计值，并非真实 NBA 统计。 */
 (function (root) {
   'use strict';
 
-  const ATTRS = ['three', 'mid', 'drive', 'handle', 'post', 'inside', 'def', 'rebound'];
-  const LABELS = { three: '三分', mid: '中投', drive: '突破', handle: '控球', post: '背身', inside: '篮下', def: '防守', rebound: '篮板' };
+  const DATA=root.SupFusionGameData||(typeof require==='function'?require('./game-data.js'):null);
+  if(!DATA)throw new Error('SupFusionGameData is required before game-core.js');
+
+  const ATTRS = DATA.ATTRS;
+  const LABELS = DATA.LABELS;
   const SLOTS = [
     { id: 'three', label: '三分', secondary: 'handle' },
     { id: 'mid', label: '中投', secondary: 'drive' },
     { id: 'drive', label: '突破', secondary: 'inside' },
     { id: 'handle', label: '控球', secondary: 'mid' },
-    { id: 'post', label: '背身', secondary: 'inside' },
-    { id: 'def', label: '防守', secondary: 'rebound' }
+    { id: 'inside', label: '篮下', secondary: 'drive' },
+    { id: 'def', label: '防守', secondary: 'inside' }
   ];
   const STRATEGIES = {
     outside: { name: '外线拉开', beats: 'collapse', shot: 'three', description: '三分出手更多，克制护框收缩' },
@@ -18,59 +21,21 @@
     collapse: { name: '护框收缩', beats: 'drive', shot: 'inside', description: '内线防守更强，克制突破冲筐' }
   };
   const TALENTS = [
-    { id: 'outside', name: '外线速成', gain: '三分、控球 +5；开局免费招募 +1', cost: '背身 -3' },
-    { id: 'inside', name: '禁区霸主', gain: '背身、篮下、篮板 +5', cost: '三分 -3' },
-    { id: 'defense', name: '铁血防线', gain: '防守、篮板 +5；失败补偿 +2', cost: '胜利基础奖金 -1' },
-    { id: 'agent', name: '球星经纪人', gain: '每关免费招募 +1', cost: '训练额外花费 2 奖金' },
+    { id: 'outside', name: '外线速成', gain: '三分、控球 +5；开局免费招募 +1', cost: '篮下 -3' },
+    { id: 'inside', name: '禁区霸主', gain: '篮下 +7、防守 +3', cost: '三分 -3' },
+    { id: 'defense', name: '铁血防线', gain: '防守 +7；失败补偿 +2', cost: '胜利基础奖金 -1' },
+    { id: 'agent', name: '球星经纪人', gain: '付费招募价格减少 2 奖金', cost: '训练额外花费 2 奖金' },
     { id: 'economy', name: '精算大师', gain: '胜利奖金 +2；利息上限 +1', cost: '开局免费招募 -1' }
   ];
-  // 属性顺序：三分、中投、突破、控球、背身、篮下、防守、篮板。
-  const STAR_ROWS = [
-    ['curry','斯蒂芬·库里','S','PG','金州', 'three',[96,91,82,94,50,72,71,60],'超远射程'],
-    ['lebron','勒布朗·詹姆斯','L','SF','洛杉矶','drive',[84,88,96,94,86,96,88,90],'全能统治'],
-    ['kobe','科比·布莱恩特','S','SG','洛杉矶','mid',[86,95,89,87,82,88,84,72],'关键杀手'],
-    ['duncan','蒂姆·邓肯','S','PF','圣安东尼奥','post',[52,88,71,69,94,93,96,96],'稳固根基'],
-    ['kawhi','科怀·伦纳德','S','SF','洛杉矶','def',[86,89,85,80,77,89,97,87],'死亡缠绕'],
-    ['irving','凯里·欧文','A','PG','达拉斯','handle',[90,89,91,96,61,82,73,57],'脚踝终结'],
-    ['durant','凯文·杜兰特','S','SF','菲尼克斯','mid',[92,97,86,84,85,94,84,79],'无解投射'],
-    ['jokic','尼古拉·约基奇','S','C','丹佛','post',[81,90,76,95,95,96,83,96],'中轴策应'],
-    ['giannis','扬尼斯·阿德托昆博','S','PF','密尔沃基','drive',[66,79,97,86,88,98,94,95],'禁区冲击'],
-    ['shaq','沙奎尔·奥尼尔','L','C','洛杉矶','inside',[30,70,83,71,97,99,91,99],'篮下巨兽'],
-    ['jordan','迈克尔·乔丹','L','SG','芝加哥','mid',[82,97,97,92,88,97,96,85],'最后一投'],
-    ['wade','德维恩·韦德','A','SG','迈阿密','drive',[72,87,95,89,74,91,90,77],'闪电突破'],
-    ['harden','詹姆斯·哈登','A','SG','洛杉矶','handle',[93,87,91,94,78,88,72,69],'节奏大师'],
-    ['klay','克莱·汤普森','A','SG','达拉斯','three',[95,86,77,75,62,81,86,71],'接球即投'],
-    ['green','德雷蒙德·格林','B','PF','金州','def',[75,74,71,84,82,80,93,89],'防线指挥'],
-    ['holiday','朱·霍勒迪','B','PG','波士顿','def',[82,83,78,86,67,78,92,75],'后场铁闸'],
-    ['white','德里克·怀特','B','G','波士顿','def',[82,81,77,83,63,78,88,70],'追身封盖'],
-    ['lillard','达米安·利拉德','A','PG','密尔沃基','three',[94,87,88,92,62,81,72,62],'超远决胜'],
-    ['tatum','杰森·塔图姆','A','SF','波士顿','mid',[87,89,88,85,83,88,86,83],'锋线得分'],
-    ['booker','德文·布克','A','SG','菲尼克斯','mid',[88,94,86,87,72,86,78,67],'中投连击'],
-    ['embiid','乔尔·恩比德','A','C','费城','post',[79,86,79,74,93,96,89,95],'低位威慑'],
-    ['davis','安东尼·戴维斯','A','PF','达拉斯','def',[74,82,83,72,88,94,96,95],'禁区屏障'],
-    ['westbrook','拉塞尔·威斯布鲁克','B','PG','丹佛','drive',[70,78,94,88,70,86,77,83],'全速冲锋'],
-    ['paul','克里斯·保罗','A','PG','圣安东尼奥','handle',[86,92,76,97,60,75,88,63],'精准掌控'],
-    ['nash','史蒂夫·纳什','A','PG','菲尼克斯','handle',[91,92,78,98,55,79,68,62],'大师传球'],
-    ['rodman','丹尼斯·罗德曼','B','PF','芝加哥','rebound',[45,63,75,62,77,78,92,99],'篮板狂人'],
-    ['gobert','鲁迪·戈贝尔','B','C','明尼苏达','def',[35,59,61,58,78,89,96,97],'护框专家'],
-    ['anunoby','OG·阿奴诺比','C','SF','纽约','def',[79,76,78,72,65,76,87,77],'侧翼防线'],
-    ['caruso','亚历克斯·卡鲁索','C','G','俄克拉荷马城','def',[76,73,76,80,58,73,88,70],'拼抢先锋'],
-    ['lopez','布鲁克·洛佩兹','C','C','密尔沃基','inside',[78,73,55,57,82,86,86,82],'高塔投射']
-  ];
-  const STARS = STAR_ROWS.map(r => ({ id:r[0], name:r[1], tier:r[2], role:r[3], team:r[4], best:r[5], attrs:Object.fromEntries(ATTRS.map((a,i)=>[a,r[6][i]])), talent:r[7] }));
+  const STAR_ROWS = DATA.STAR_ROWS;
+  const STARS = STAR_ROWS.map(r => ({
+    id:r[0],name:r[1],tier:r[2],role:r[3],team:r[4],best:r[5],
+    attrs:Object.fromEntries(ATTRS.map((a,i)=>[a,r[6][i]])),talent:r[7],talentEffect:DATA.TALENT_DETAILS[r[0]],variantOf:r[8]||null,
+    maxStars:r[2]==='L'?5:3,maxTrain:r[2]==='L'?5:3
+  }));
   const BY_ID = Object.fromEntries(STARS.map(s=>[s.id,s]));
   const FOES = ['giannis','irving','tatum','harden','durant','davis','jokic','kawhi','jordan','lebron'];
-  const SYNERGIES = [
-    { name:'水花兄弟', ids:['curry','klay'], attr:'three', gain:6 },
-    { name:'冠军内外线', ids:['kobe','shaq'], attr:'inside', gain:6 },
-    { name:'热火双核', ids:['lebron','wade'], attr:'drive', gain:5 },
-    { name:'勇士防线', ids:['curry','green'], attr:'def', gain:5 },
-    { name:'绿军攻防', ids:['tatum','holiday','white'], attr:'def', gain:7 },
-    { name:'雷霆三少', ids:['durant','harden','westbrook'], attr:'three', gain:7 },
-    { name:'关键杀手', ids:['jordan','kobe'], attr:'mid', gain:6 },
-    { name:'禁区双塔', ids:['duncan','davis'], attr:'rebound', gain:6 },
-    { name:'传球大师', ids:['jokic','nash'], attr:'handle', gain:6 }
-  ];
+  const SYNERGIES = DATA.SYNERGIES;
   const BOOSTS = [
     { id:'hot', name:'手感火热', price:5, attr:'three', gain:8, description:'下一场三分 +8' },
     { id:'paint', name:'禁区强攻', price:5, attr:'inside', gain:8, description:'下一场篮下 +8' },
@@ -84,13 +49,15 @@
     { id:'band', name:'防守护臂', price:9, attr:'def', gain:4, description:'永久防守 +4' }
   ];
   const tierValue = { C:0, B:1, A:2, S:3, L:4 };
+  function saleValue(id){const star=BY_ID[id];return star?Math.max(3,tierValue[star.tier]+2):0}
+  function recruitCost(run){return run.talent==='agent'?6:8}
   const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
 
   function nextRandom(run){run.rng=(Math.imul(run.rng,1664525)+1013904223)>>>0;return run.rng/4294967296}
   function randomChoice(run,arr){return arr[Math.floor(nextRandom(run)*arr.length)]}
-  function createGame(){return { version:1, run:null, profile:{runs:0,wins:0,bestStage:0,bestEndless:0,legend:0,discovered:[]} }}
-  function createRun(talent,seed){
-    const run={seed:seed>>>0,rng:seed>>>0,talent,stage:1,endless:false,morale:3,cash:16,free:6,refreshFree:1,owned:{},slots:Object.fromEntries(SLOTS.map(s=>[s.id,null])),bench:[],benchLimit:5,offer:[],pending:null,boosts:[],gear:[],wins:0,losses:0,lastBattle:null,ended:false,awarded:false};
+  function createGame(){return { version:1, run:null, profile:{runs:0,wins:0,bestStage:0,bestEndless:0,legend:0,discovered:[],upgrades:{scouting:0}} }}
+  function createRun(talent,seed,progress={}){
+    const run={seed:seed>>>0,rng:seed>>>0,talent,stage:1,endless:false,rarityBonus:clamp(progress.rarityBonus||0,0,10),morale:3,cash:16,free:6,refreshFree:1,owned:{},slots:Object.fromEntries(SLOTS.map(s=>[s.id,null])),bench:[],benchLimit:5,offer:[],pending:null,boosts:[],gear:[],wins:0,losses:0,lastBattle:null,ended:false,awarded:false};
     if(talent==='outside')run.free+=1;
     if(talent==='economy')run.free-=1;
     makeOffer(run);
@@ -98,16 +65,42 @@
   }
   function ownedCount(run){return Object.keys(run.owned).length}
   function starterCount(run){return SLOTS.filter(s=>run.slots[s.id]).length}
-  function activeSynergies(run){const ids=new Set(Object.keys(run.owned));return SYNERGIES.filter(s=>s.ids.every(id=>ids.has(id)))}
-  function tierRoll(run){const n=nextRandom(run)*100;return n<3?'L':n<17?'S':n<48?'A':n<82?'B':'C'}
+  function identityOf(id){const star=BY_ID[id];return star?(star.variantOf||star.id):id}
+  function ownedIdentities(run){return new Set(Object.keys(run.owned).map(identityOf))}
+  function activeSynergies(run){const ids=ownedIdentities(run);return SYNERGIES.filter(s=>s.ids.every(id=>ids.has(id)))}
+  function starSynergies(id){const identity=identityOf(id);return SYNERGIES.filter(s=>s.ids.includes(identity))}
+  function tierOdds(run){
+    const stage=Math.max(1,run.stage||1),step=Math.min(4,Math.floor((stage-1)/2));
+    const tables=[
+      {C:45,B:40,A:14.5,S:.5,L:0},
+      {C:34,B:40,A:22,S:3.5,L:.5},
+      {C:25,B:38,A:28,S:8,L:1},
+      {C:17,B:34,A:33,S:13.5,L:2.5},
+      {C:10,B:28,A:36,S:21,L:5}
+    ];
+    const odds={...tables[step]};
+    if(stage>10){const extra=Math.min(7,(stage-10)*.35);odds.L+=extra;odds.S+=extra*.5;odds.C=Math.max(2,odds.C-extra);odds.B-=extra*.5}
+    const bonus=clamp(run.rarityBonus||0,0,10);
+    odds.L+=bonus*.25;odds.S+=bonus*.5;odds.A+=bonus*.25;odds.C=Math.max(0,odds.C-bonus);
+    const total=Object.values(odds).reduce((sum,value)=>sum+value,0);
+    odds.B+=100-total;
+    return odds;
+  }
+  function tierRoll(run){
+    const odds=tierOdds(run),n=nextRandom(run)*100;
+    let cursor=odds.L;if(n<cursor)return 'L';
+    cursor+=odds.S;if(n<cursor)return 'S';
+    cursor+=odds.A;if(n<cursor)return 'A';
+    cursor+=odds.B;return n<cursor?'B':'C';
+  }
   function makeOffer(run){
     if(run.offer.length)return run.offer;
     const chosen=[];
     for(let i=0;i<4;i++){
       let tier=tierRoll(run);
-      if(i===3 && run.stage<=2 && !chosen.some(id=>tierValue[BY_ID[id].tier]>=2))tier='A';
-      let pool=STARS.filter(s=>s.tier===tier && !chosen.includes(s.id) && (starterCount(run)>=6 || !run.owned[s.id]));
-      if(!pool.length)pool=STARS.filter(s=>!chosen.includes(s.id) && (starterCount(run)>=6 || !run.owned[s.id]));
+      if(i===3 && run.stage<=2 && !chosen.some(id=>tierValue[BY_ID[id].tier]>=1))tier='B';
+      let pool=STARS.filter(s=>s.tier===tier && !chosen.includes(s.id) && !run.owned[s.id]);
+      if(!pool.length)pool=STARS.filter(s=>!chosen.includes(s.id) && !run.owned[s.id]);
       if(!pool.length)pool=STARS.filter(s=>!chosen.includes(s.id));
       chosen.push(randomChoice(run,pool).id);
     }
@@ -116,13 +109,14 @@
   }
   function recruit(run,id){
     if(run.ended||run.pending||!run.offer.includes(id))return {ok:false,reason:'本轮无法选择该球星'};
-    if(run.free<=0 && run.cash<8)return {ok:false,reason:'奖金不足，无法追加招募'};
-    if(run.free>0)run.free--;else run.cash-=8;
+    const cost=recruitCost(run);
+    if(run.free<=0 && run.cash<cost)return {ok:false,reason:'奖金不足，无法追加招募'};
+    if(run.free>0)run.free--;else run.cash-=cost;
     run.offer=[];
     const star=BY_ID[id];
     if(run.owned[id]){
       const own=run.owned[id];
-      if(own.stars<3)own.stars++;else run.cash+=4;
+      if(own.stars<star.maxStars)own.stars++;else run.cash+=4;
       return {ok:true,kind:'duplicate',star};
     }
     const vacant=SLOTS.filter(s=>!run.slots[s.id]);
@@ -137,7 +131,7 @@
   }
   function resolvePending(run,mode,index){
     const id=run.pending;if(!id)return false;
-    if(mode==='sell'){run.cash+=Math.max(3,tierValue[BY_ID[id].tier]+2)}
+    if(mode==='sell'){run.cash+=saleValue(id)}
     else if(mode==='replace' && Number.isInteger(index) && index>=0 && index<run.bench.length){
       const old=run.bench[index];delete run.owned[old];run.cash+=Math.max(2,tierValue[BY_ID[old].tier]+1);
       run.owned[id]={stars:1,train:0,trainedAt:0};run.bench[index]=id;
@@ -150,9 +144,35 @@
     if(outgoing)run.bench[benchIndex]=outgoing;else run.bench.splice(benchIndex,1);
     return true;
   }
+  function swapPositions(run,from,to){
+    if(run.ended||run.lastBattle||!from||!to)return false;
+    const valid=place=>place.kind==='slot'
+      ?SLOTS.some(s=>s.id===place.key)
+      :place.kind==='bench'&&Number.isInteger(place.key)&&place.key>=0&&place.key<run.bench.length;
+    if(!valid(from)||!valid(to))return false;
+    if(from.kind===to.kind&&from.key===to.key)return false;
+    const read=place=>place.kind==='slot'?run.slots[place.key]:run.bench[place.key];
+    const write=(place,id)=>{if(place.kind==='slot')run.slots[place.key]=id;else run.bench[place.key]=id};
+    const first=read(from),second=read(to);
+    if(!first&&!second)return false;
+    if((from.kind==='bench'||to.kind==='bench')&&(!first||!second)){
+      const bench=from.kind==='bench'?from:to;
+      const slot=from.kind==='slot'?from:to;
+      if(!read(bench))return false;
+      return swapBench(run,bench.key,slot.key);
+    }
+    write(from,second);write(to,first);
+    return true;
+  }
+  function sellBench(run,index){
+    if(run.ended||run.lastBattle||!Number.isInteger(index)||index<0||index>=run.bench.length)return 0;
+    const id=run.bench[index],value=saleValue(id);
+    run.bench.splice(index,1);delete run.owned[id];run.cash+=value;
+    return value;
+  }
   function playerScore(star,own,key){return star.attrs[key]+(own.stars-1)*3+own.train*3}
   function fused(run){
-    const stats={};
+    const stats={},talents=[];
     for(const attr of ATTRS){
       let sum=0,weight=0;
       for(const slot of SLOTS){
@@ -162,25 +182,29 @@
       }
       stats[attr]=weight?Math.round(sum/weight):0;
     }
-    for(const bond of activeSynergies(run))stats[bond.attr]+=bond.gain;
-    if(run.talent==='outside'){stats.three+=5;stats.handle+=5;stats.post-=3}
-    if(run.talent==='inside'){stats.post+=5;stats.inside+=5;stats.rebound+=5;stats.three-=3}
-    if(run.talent==='defense'){stats.def+=5;stats.rebound+=5}
+    for(const slot of SLOTS){
+      const id=run.slots[slot.id],star=BY_ID[id];
+      if(star&&star.best===slot.id){stats[star.talentEffect.attr]+=star.talentEffect.gain;talents.push(star)}
+    }
+    for(const bond of activeSynergies(run))for(const [attr,gain] of Object.entries(bond.effect?.stats||{[bond.attr]:bond.gain}))stats[attr]+=gain;
+    if(run.talent==='outside'){stats.three+=5;stats.handle+=5;stats.inside-=3}
+    if(run.talent==='inside'){stats.inside+=7;stats.def+=3;stats.three-=3}
+    if(run.talent==='defense')stats.def+=7;
     for(const itemId of run.gear){const item=GEAR.find(g=>g.id===itemId);if(!item)continue;if(item.attr==='all')for(const a of ATTRS)stats[a]+=item.gain;else stats[item.attr]+=item.gain}
     for(const boostId of run.boosts){const item=BOOSTS.find(b=>b.id===boostId);if(!item)continue;if(item.attr==='all')for(const a of ATTRS)stats[a]+=item.gain;else stats[item.attr]+=item.gain}
     for(const key of ATTRS)stats[key]=clamp(Math.round(stats[key]),0,110);
     const rating=Math.round(ATTRS.reduce((n,a)=>n+stats[a],0)/ATTRS.length);
-    return {stats,rating,bonds:activeSynergies(run)};
+    return {stats,rating,bonds:activeSynergies(run),talents};
   }
   function opponent(run){
     const id=FOES[(run.stage-1)%FOES.length],star=BY_ID[id];
     const diff=run.stage<=10?(-11+run.stage*2):(9+(run.stage-10)*2.1);
     const stats=Object.fromEntries(ATTRS.map(a=>[a,clamp(Math.round(star.attrs[a]+diff),35,110)]));
     const strategy=star.best==='three'?'outside':star.best==='drive'?'drive':'collapse';
-    return {id,name:star.name,strategy,stats,rating:Math.round(ATTRS.reduce((n,a)=>n+stats[a],0)/8)};
+    return {id,name:star.name,strategy,stats,rating:Math.round(ATTRS.reduce((n,a)=>n+stats[a],0)/ATTRS.length)};
   }
-  function trainingCost(run,id){const level=run.owned[id]?.train??0;return [4,7,11][level]+(run.talent==='agent'?2:0)}
-  function train(run,id){const own=run.owned[id];if(!own||own.train>=3||own.trainedAt===run.stage)return false;const cost=trainingCost(run,id);if(run.cash<cost)return false;run.cash-=cost;own.train++;own.trainedAt=run.stage;return true}
+  function trainingCost(run,id){const level=run.owned[id]?.train??0;return [4,7,11,15,20][level]+(run.talent==='agent'?2:0)}
+  function train(run,id){const own=run.owned[id],star=BY_ID[id];if(!own||!star||own.train>=star.maxTrain||own.trainedAt===run.stage)return false;const cost=trainingCost(run,id);if(run.cash<cost)return false;run.cash-=cost;own.train++;own.trainedAt=run.stage;return true}
   function buyBoost(run,id){const item=BOOSTS.find(b=>b.id===id);if(!item||run.cash<item.price||run.boosts.length>=3||run.boosts.includes(id))return false;run.cash-=item.price;run.boosts.push(id);return true}
   function buyGear(run,id){const item=GEAR.find(g=>g.id===id);if(!item||run.cash<item.price||run.gear.length>=5||run.gear.includes(id))return false;run.cash-=item.price;run.gear.push(id);return true}
   function expandBench(run){if(run.cash<10||run.benchLimit>=10)return false;run.cash-=10;run.benchLimit++;return true}
@@ -210,7 +234,7 @@
       const atk=turn==='us'?own.stats:foe.stats,def=turn==='us'?foe.stats:own.stats;
       const style=turn==='us'?strategy:foe.strategy;
       const type=shotType(run,style,turn),shot=type==='three'?atk.three:type==='mid'?atk.mid:(atk.drive*.35+atk.inside*.65);
-      const control=atk.handle-(def.def*.55+def.rebound*.15);
+      const control=atk.handle-def.def*.65;
       const turnover=clamp(.1-control*.0015,.025,.18);
       let made=false;
       if(nextRandom(run)>turnover){
@@ -232,7 +256,8 @@
     if(won){
       const base=6+Math.floor(run.stage/2)-(run.talent==='defense'?1:0)+(run.talent==='economy'?2:0);
       const interest=Math.min(run.talent==='economy'?4:3,Math.floor(run.cash/10));
-      const bond=own.bonds.length?1:0;reward=base+interest+bond;run.cash+=reward;run.wins++;detail=[`胜利 ${base}`,`利息 ${interest}`,`羁绊 ${bond}`];
+      const bond=own.bonds.length?1:0,bondCash=own.bonds.reduce((sum,item)=>sum+(item.effect?.winCash||0),0);
+      reward=base+interest+bond+bondCash;run.cash+=reward;run.wins++;detail=[`胜利 ${base}`,`利息 ${interest}`,`羁绊 ${bond+bondCash}`];
     }else{
       run.morale--;run.losses++;reward=3+(run.talent==='defense'?2:0);run.cash+=reward;detail=[`失败补偿 ${reward}`];
     }
@@ -248,10 +273,13 @@
     if(!run.lastBattle.won){run.lastBattle=null;return true}
     if(run.stage===10&&choice==='finish'){run.lastBattle.legendEarned=finishRun(game);return true}
     if(run.stage===10)run.endless=true;
-    run.stage++;run.free+=2+(run.talent==='agent'?1:0);run.refreshFree=1;run.offer=[];run.lastBattle=null;
+    const bonds=activeSynergies(run);
+    run.stage++;run.free=1;
+    run.cash+=bonds.reduce((sum,item)=>sum+(item.effect?.stageCash||0),0);
+    run.refreshFree=1;run.offer=[];run.lastBattle=null;
     return true;
   }
-  const api={ATTRS,LABELS,SLOTS,STRATEGIES,TALENTS,STARS,BY_ID,FOES,SYNERGIES,BOOSTS,GEAR,createGame,createRun,makeOffer,recruit,resolvePending,swapBench,starterCount,ownedCount,activeSynergies,fused,opponent,trainingCost,train,buyBoost,buyGear,expandBench,refreshOffer,battle,continueRun,finishRun,clamp};
+  const api={ATTRS,LABELS,SLOTS,STRATEGIES,TALENTS,STARS,BY_ID,FOES,SYNERGIES,BOOSTS,GEAR,createGame,createRun,tierOdds,makeOffer,recruit,recruitCost,resolvePending,swapBench,swapPositions,saleValue,sellBench,starterCount,ownedCount,identityOf,starSynergies,activeSynergies,fused,opponent,trainingCost,train,buyBoost,buyGear,expandBench,refreshOffer,battle,continueRun,finishRun,clamp};
   if(typeof module!=='undefined'&&module.exports)module.exports=api;
   root.SupFusionGameCore=api;
 })(typeof window!=='undefined'?window:globalThis);

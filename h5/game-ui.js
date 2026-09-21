@@ -5,7 +5,7 @@
   const STORAGE=window.FusionStorage;
   const els=Object.fromEntries(['home','talent','recruit','roster','shop','duel','result','profile'].map(id=>[id,document.getElementById(id)]));
   let game=C.createGame(),screen='home',talentOffer=[],selectedTalent='',selectedOffer='',selectedPlace=null,showBonds=false,detailStar='',strategy='collapse',shopTab='training',profileTab='stars',saveQueue=Promise.resolve();
-  const tierName={L:'传奇',S:'名人堂',A:'黄金',B:'白银',C:'青铜'};
+  const tierName={L:'SR',S:'S',A:'A',B:'B',C:'C'};
   const tierClass={L:'tier-legend',S:'tier-s',A:'tier-a',B:'tier-b',C:'tier-c'};
   const attrOrder=['three','mid','drive','handle','inside','def'];
   const barColor={three:'bar-orange',mid:'bar-gold',drive:'bar-red',handle:'bar-blue',inside:'bar-orange',def:'bar-gold'};
@@ -181,7 +181,7 @@
     els.recruit.innerHTML=`
       <button class="inline-back" data-act="roster">← 返回融合球场</button>
       <div class="draft-heading"><div><span class="league-label">HOOP LEGEND</span><h1>DRAFT <small>招募</small></h1></div></div>
-      <div class="draft-odds"><span class="tier-dot legend-dot"></span>传奇 ${pct(odds.L)}% <span class="tier-dot s-dot"></span>名人堂 ${pct(odds.S)}% <span class="tier-dot a-dot"></span>黄金 ${pct(odds.A)}% <span>白银 ${pct(odds.B)}% · 青铜 ${pct(odds.C)}%</span><b>当前 ${r.cash} 奖金</b></div>
+      <div class="draft-odds"><span class="tier-dot legend-dot"></span>SR ${pct(odds.L)}% <span class="tier-dot s-dot"></span>S ${pct(odds.S)}% <span class="tier-dot a-dot"></span>A ${pct(odds.A)}% <span class="tier-dot b-dot"></span>B ${pct(odds.B)}% <span class="tier-dot c-dot"></span>C ${pct(odds.C)}%<b>当前 ${r.cash} 奖金</b></div>
       <div class="choicegrid">${r.offer.map(draftCard).join('')}</div>
       <div class="floatingaction"><button class="btn wide" data-act="pick" ${r.free<=0&&r.cash<C.recruitCost(r)?'disabled':''}>${r.free<=0&&r.cash<C.recruitCost(r)?'奖金不足，无法招募':'确定选入 '+(selected?selected.name:'')+' →'}</button></div>`;
   }

@@ -67,7 +67,12 @@
   function starterCount(run){return SLOTS.filter(s=>run.slots[s.id]).length}
   function identityOf(id){const star=BY_ID[id];return star?(star.variantOf||star.id):id}
   function ownedIdentities(run){return new Set(Object.keys(run.owned).map(identityOf))}
-  function activeSynergies(run){const ids=ownedIdentities(run);return SYNERGIES.filter(s=>s.ids.every(id=>ids.has(id)))}
+  function completedSynergies(run){const ids=ownedIdentities(run);return SYNERGIES.filter(s=>s.ids.every(id=>ids.has(id)))}
+  function activeSynergies(run){
+    const completed=completedSynergies(run),highest=new Map();
+    for(const bond of completed)if(bond.chainId)highest.set(bond.chainId,Math.max(highest.get(bond.chainId)||0,bond.chainLevel||0));
+    return completed.filter(bond=>!bond.chainId||(bond.chainLevel||0)===highest.get(bond.chainId));
+  }
   function starSynergies(id){const identity=identityOf(id);return SYNERGIES.filter(s=>s.ids.includes(identity))}
   function tierOdds(run){
     const stage=Math.max(1,run.stage||1),step=Math.min(4,Math.floor((stage-1)/2));

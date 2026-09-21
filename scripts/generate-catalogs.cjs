@@ -2,21 +2,25 @@ const fs = require('node:fs');
 const path = require('node:path');
 const D = require('../h5/game-data.js');
 
-const tierName = { C: '青铜', B: '白银', A: '黄金', S: '名人堂', L: '传奇' };
-const csv = rows => '\ufeff' + rows.map(row => row.map(value => `"${String(value ?? '').replaceAll('"', '""')}"`).join(',')).join('\r\n') + '\r\n';
+const tierName = { C: 'C', B: 'B', A: 'A', S: 'S', L: 'SR' };
+const csv = (rows, eol = '\n') => '\ufeff' + rows.map(row => row.map(value => `"${String(value ?? '').replaceAll('"', '""')}"`).join(',')).join(eol) + eol;
 const outDir = path.join(__dirname, '..', 'docs', 'data');
 fs.mkdirSync(outDir, { recursive: true });
+function writeFileIfChanged(file, content) {
+  if (fs.existsSync(file) && fs.readFileSync(file, 'utf8') === content) return;
+  fs.writeFileSync(file, content);
+}
 
 const players = D.STAR_ROWS.map(row => ({
   id: row[0], name: row[1], tier: tierName[row[2]], role: row[3], team: row[4], best: D.LABELS[row[5]],
   attrs: Object.fromEntries(D.ATTRS.map((attr, index) => [attr, row[6][index]])), talent: row[7], variantOf: row[8] || ''
 }));
 const byId = Object.fromEntries(players.map(player => [player.id, player]));
-fs.writeFileSync(path.join(outDir, 'my-game-players.csv'), csv([
-  ['ID', '球员', '等级', '位置', '球队/标签', '推荐槽位', '三分', '中投', '突破', '控球', '篮下', '防守', '专属天赋', '传奇原型'],
+writeFileIfChanged(path.join(outDir, 'my-game-players.csv'), csv([
+  ['ID', '球员', '等级', '位置', '球队/标签', '推荐槽位', '三分', '中投', '突破', '控球', '篮下', '防守', '专属天赋', 'SR原型'],
   ...players.map(p => [p.id, p.name, p.tier, p.role, p.team, p.best, ...D.ATTRS.map(attr => p.attrs[attr]), p.talent, p.variantOf ? byId[p.variantOf].name : ''])
 ]));
-fs.writeFileSync(path.join(outDir, 'my-game-bonds.csv'), csv([
+writeFileIfChanged(path.join(outDir, 'my-game-bonds.csv'), csv([
   ['羁绊', '人数', '成员', '效果'],
   ...D.SYNERGIES.map(bond => [bond.name, bond.ids.length, bond.ids.map(id => byId[id].name).join('、'), bond.description])
 ]));
@@ -39,20 +43,20 @@ for (const bond of referenceBonds) for (const member of bond.members) {
   if (!roleMap.has(member)) roleMap.set(member, []);
   roleMap.get(member).push(bond.name);
 }
-fs.writeFileSync(path.join(outDir, 'three-kingdoms-bonds.csv'), csv([
+writeFileIfChanged(path.join(outDir, 'three-kingdoms-bonds.csv'), csv([
   ['羁绊', '人数', '成员', '截图覆盖情况'],
   ...referenceBonds.map(bond => [bond.name, bond.members.length, bond.members.join('、'), bond.members.length === 2 ? '截图可辨认；双人羁绊另有3组未出现在截图范围内' : '截图可辨认'])
-]));
-fs.writeFileSync(path.join(outDir, 'three-kingdoms-characters.csv'), csv([
+], '\r\n'));
+writeFileIfChanged(path.join(outDir, 'three-kingdoms-characters.csv'), csv([
   ['角色', '截图中关联羁绊数', '截图中关联羁绊'],
   ...[...roleMap.entries()].sort((a,b) => b[1].length-a[1].length || a[0].localeCompare(b[0], 'zh-CN')).map(([name,bonds]) => [name,bonds.length,bonds.join('、')])
-]));
+], '\r\n'));
 
 const tierSummary = ['C','B','A','S','L'].map(tier => {
   const list = players.filter(p => p.tier === tierName[tier]);
   const scores = list.map(p => p.attrs[D.ATTRS.find(attr => D.LABELS[attr] === p.best)]);
   return `| ${tierName[tier]} | ${list.length} | ${Math.min(...scores)}–${Math.max(...scores)} |`;
 }).join('\n');
-const md = `# 球员与羁绊数据总表\n\n本页由 \`scripts/generate-catalogs.cjs\` 从正式游戏数据生成。CSV 使用 UTF-8 BOM，可直接用 Excel 打开和筛选。\n\n## 当前游戏\n\n| 等级 | 卡牌数 | 推荐属性分布 |\n| --- | ---: | ---: |\n${tierSummary}\n\n- [全部球员、等级与六项属性](data/my-game-players.csv)\n- [全部羁绊、成员与效果](data/my-game-bonds.csv)\n\n当前共 ${players.length} 张卡（${players.filter(p=>!p.variantOf).length} 名基础球员、${players.filter(p=>p.variantOf).length} 张传奇异名卡）和 ${D.SYNERGIES.length} 组羁绊。\n\n## 《三国群雄十策》截图对照\n\n- [截图角色与其关联羁绊](data/three-kingdoms-characters.csv)\n- [截图羁绊与成员](data/three-kingdoms-bonds.csv)\n\n五张截图可以完整辨认 17 组三人、6 组四人、5 组五人羁绊，以及 48/51 组双人羁绊，共 ${referenceBonds.length} 组、${roleMap.size} 名去重角色。双人羁绊最后 3 组未出现在截图可见范围内，因此表中不猜测名称和成员。截图没有展示普通角色等级和属性，角色表只记录姓名及羁绊关系。\n`;
-fs.writeFileSync(path.join(__dirname, '..', 'docs', 'player-and-bond-catalog.md'), md);
+const md = `# 球员与羁绊数据总表\n\n本页由 \`scripts/generate-catalogs.cjs\` 从正式游戏数据生成。CSV 使用 UTF-8 BOM，可直接用 Excel 打开和筛选。\n\n## 当前游戏\n\n| 等级 | 卡牌数 | 推荐属性分布 |\n| --- | ---: | ---: |\n${tierSummary}\n\n- [全部球员、等级与六项属性](data/my-game-players.csv)\n- [全部羁绊、成员与效果](data/my-game-bonds.csv)\n\n当前共 ${players.length} 张卡（${players.filter(p=>!p.variantOf).length} 名基础球员、${players.filter(p=>p.variantOf).length} 张 SR 异名卡）和 ${D.SYNERGIES.length} 组羁绊。\n\n## 《三国群雄十策》截图对照\n\n- [截图角色与其关联羁绊](data/three-kingdoms-characters.csv)\n- [截图羁绊与成员](data/three-kingdoms-bonds.csv)\n\n五张截图可以完整辨认 17 组三人、6 组四人、5 组五人羁绊，以及 48/51 组双人羁绊，共 ${referenceBonds.length} 组、${roleMap.size} 名去重角色。双人羁绊最后 3 组未出现在截图可见范围内，因此表中不猜测名称和成员。截图没有展示普通角色等级和属性，角色表只记录姓名及羁绊关系。\n`;
+writeFileIfChanged(path.join(__dirname, '..', 'docs', 'player-and-bond-catalog.md'), md);
 console.log(`Generated ${players.length} cards, ${D.SYNERGIES.length} game bonds, ${referenceBonds.length} reference bonds, ${roleMap.size} reference characters.`);

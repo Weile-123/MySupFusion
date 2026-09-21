@@ -14,15 +14,15 @@ function draftedRun(seed = 42) {
   return run;
 }
 
-test('second edition player and synergy data forms a complete network', () => {
+test('third edition player and synergy data forms a complete network', () => {
   const basePlayers = C.STARS.filter(star => !star.variantOf);
   const variants = C.STARS.filter(star => star.variantOf);
-  assert.equal(basePlayers.length, 60);
+  assert.equal(basePlayers.length, 110);
   assert.equal(variants.length, 10);
-  assert.equal(C.SYNERGIES.length, 40);
+  assert.equal(C.SYNERGIES.length, 80);
   assert.deepEqual(
     Object.fromEntries([2, 3, 4, 5].map(size => [size, C.SYNERGIES.filter(bond => bond.ids.length === size).length])),
-    { 2: 24, 3: 9, 4: 4, 5: 3 }
+    { 2: 44, 3: 17, 4: 14, 5: 5 }
   );
   const covered = new Set(C.SYNERGIES.flatMap(bond => bond.ids));
   assert.deepEqual(basePlayers.filter(star => !covered.has(star.id)).map(star => star.id), []);
@@ -58,6 +58,83 @@ test('all cards use six attributes and obey their tier ceilings', () => {
   }
 });
 
+test('requested three four and five player bonds use the approved members', () => {
+  const expected = {
+    four_shooting_guards: ['kobe', 'tmac', 'carter', 'iverson'],
+    banana_boat: ['lebron', 'wade', 'paul', 'melo'],
+    draft_96: ['kobe', 'iverson', 'nash', 'rayallen'],
+    european_kings: ['dirk', 'pau', 'jokic', 'doncic'],
+    bad_boys: ['isiah', 'dumars', 'laimbeer', 'rodman'],
+    four_centers: ['hakeem', 'shaq', 'robinson', 'ewing'],
+    death_lineup: ['curry', 'klay', 'iguodala', 'durant', 'green'],
+    bulls_dynasty: ['harper', 'jordan', 'pippen', 'rodman', 'longley'],
+    ok_dynasty: ['fisher', 'kobe', 'fox', 'horry', 'shaq'],
+    showtime_five: ['magic', 'byron_scott', 'worthy', 'ac_green', 'kareem'],
+    final_answer: ['magic', 'jordan', 'lebron', 'duncan', 'shaq'],
+    thunder_three: ['durant', 'westbrook', 'harden'],
+    heat_big_three: ['lebron', 'wade', 'bosh'],
+    celtic_big_three: ['pierce', 'garnett', 'rayallen'],
+    bull_triangle: ['jordan', 'pippen', 'rodman'],
+    nets_big_three: ['durant', 'harden', 'irving'],
+    lob_city: ['paul', 'griffin', 'deandre'],
+    celtic_dynasty: ['bird', 'mchale', 'parish'],
+    ok3: ['westbrook', 'george', 'melo'],
+    gdp: ['duncan', 'parker', 'ginobili'],
+    mamba_students: ['kobe', 'irving', 'tatum'],
+    cavs_big_three: ['lebron', 'irving', 'love'],
+    era_shooters: ['reggie', 'rayallen', 'curry'],
+    seven_seconds: ['nash', 'amare', 'marion'],
+    nuggets_core: ['jokic', 'murray', 'aaron_gordon'],
+    scoring_kaleidoscope: ['kobe', 'melo', 'durant'],
+    floor_generals: ['paul', 'kidd', 'nash'],
+    violent_dunkers: ['wilkins', 'carter', 'griffin']
+  };
+  for (const [id, ids] of Object.entries(expected)) {
+    assert.deepEqual(C.SYNERGIES.find(bond => bond.id === id)?.ids, ids, id);
+  }
+  assert.equal(C.SYNERGIES.some(bond => bond.name === '03黄金一代'), false);
+  assert.deepEqual(C.SYNERGIES.find(bond => bond.id === 'banana_boat').ids, ['lebron', 'wade', 'paul', 'melo']);
+});
+
+test('adjacent bond sizes do not repeat the same complete core', () => {
+  const overlaps = [2, 3, 4].flatMap(size => {
+    const smaller = C.SYNERGIES.filter(bond => bond.ids.length === size);
+    const larger = C.SYNERGIES.filter(bond => bond.ids.length === size + 1);
+    return smaller.flatMap(core => larger.filter(group => core.ids.every(id => group.ids.includes(id))).map(group => [core.name, group.name]));
+  });
+  assert.deepEqual(overlaps, []);
+});
+
+test('every base S player belongs to at least one four-player bond', () => {
+  const fourPlayerIds = new Set(C.SYNERGIES.filter(bond => bond.ids.length === 4).flatMap(bond => bond.ids));
+  const missing = C.STARS.filter(player => player.tier === 'S' && !player.variantOf && !fourPlayerIds.has(player.id)).map(player => player.name);
+  assert.deepEqual(missing, []);
+});
+
+test('bond budgets rise by group size and recurring cash consumes power budget', () => {
+  const budget = bond => Object.values(bond.effect.stats).reduce((sum, value) => sum + value, 0)
+    + (bond.effect.winCash + bond.effect.stageCash) * 4
+    + bond.effect.freeRecruit * 6;
+  const ranges = { 2: [7, 9], 3: [12, 17], 4: [19, 20], 5: [26, 30] };
+  for (const bond of C.SYNERGIES) {
+    const [min, max] = ranges[bond.ids.length];
+    assert.ok(budget(bond) >= min && budget(bond) <= max, bond.name + ': ' + budget(bond));
+  }
+});
+
+test('a completed bond chain applies only its highest level package', () => {
+  const run = C.createRun('outside', 9);
+  for (const id of ['curry', 'klay', 'green']) run.owned[id] = { stars: 1, train: 0, trainedAt: 0 };
+  assert.deepEqual(C.activeSynergies(run).map(bond => bond.id).sort(), ['splash', 'warrior_brain']);
+  for (const id of ['iguodala', 'durant']) run.owned[id] = { stars: 1, train: 0, trainedAt: 0 };
+  assert.deepEqual(C.activeSynergies(run).filter(bond => bond.chainId === 'warriors_death').map(bond => bond.id), ['death_lineup']);
+
+  const bulls = C.createRun('outside', 10);
+  for (const id of ['jordan', 'pippen', 'rodman']) bulls.owned[id] = { stars: 1, train: 0, trainedAt: 0 };
+  assert.deepEqual(C.activeSynergies(bulls).filter(bond => bond.chainId === 'bulls_dynasty').map(bond => bond.id), ['bull_triangle']);
+  for (const id of ['harper', 'longley']) bulls.owned[id] = { stars: 1, train: 0, trainedAt: 0 };
+  assert.deepEqual(C.activeSynergies(bulls).filter(bond => bond.chainId === 'bulls_dynasty').map(bond => bond.id), ['bulls_dynasty']);
+});
 test('the six mandatory opening drafts exclude recruited players', () => {
   const run = C.createRun('outside', 20260921);
   const recruited = new Set();

@@ -1,0 +1,180 @@
+{
+  "source": {
+    "title": "三国群雄十策",
+    "version": "2.5.4",
+    "capturedAt": "2026-09-22",
+    "page": "https://activity-static.hupu.com/shaper/published/app_7acc4e2a0e/index.html?night=0",
+    "bundle": "https://activity-static.hupu.com/shaper/published/app_7acc4e2a0e/__ai_app.html"
+  },
+  "run": {
+    "startGold": 12,
+    "maxHealth": 3,
+    "fieldSize": 6,
+    "benchSize": 5,
+    "benchSizeMax": 10,
+    "benchUpgradeCost": 10,
+    "mainStageCount": 10,
+    "heroShopUnlockAfterStage": 5
+  },
+  "draft": {
+    "offerSize": 4,
+    "openingDrafts": 6,
+    "freeDraftsPerRound": 1,
+    "paidDraftCost": 8,
+    "tenDraftCount": 10,
+    "tenDraftBaseCost": 72,
+    "adPowerDraftPerRound": 1,
+    "baseSsrChancePerOffer": 0.008,
+    "rates": {
+      "opening": { "C": 0.44, "B": 0.28, "A": 0.26, "S": 0.02 },
+      "early": { "C": 0.43, "B": 0.29, "A": 0.24, "S": 0.04 },
+      "middle": { "C": 0.27, "B": 0.27, "A": 0.4, "S": 0.06 },
+      "late": { "C": 0.15, "B": 0.21, "A": 0.54, "S": 0.1 }
+    },
+    "pity": {
+      "minimumRatingPerOffer": "B",
+      "aPlusAfterMisses": 3,
+      "openingThirdGuaranteesAPlusWhenPriorAPlusOffers": 0,
+      "openingSixthGuaranteesAPlusCount": 2,
+      "openingSixthTriggersWhenPriorAPlusOffersBelow": 2,
+      "forceSAfterMisses": 11,
+      "sSoftPityStartsAfterMisses": 6,
+      "sSoftPityStep": 0.01,
+      "sSoftPityCap": 0.06,
+      "cRateFloor": 0.02
+    },
+    "endlessRamp": {
+      "aStep": 0.01,
+      "aCap": 0.14,
+      "sStep": 0.004,
+      "sCap": 0.07,
+      "cFloor": 0.04,
+      "bFloor": 0.06,
+      "cShare": 0.6,
+      "ssrStep": 0.0005,
+      "ssrCap": 0.02
+    }
+  },
+  "growth": {
+    "mainMaxStars": 3,
+    "mainMaxTraining": 3,
+    "endlessMaxStars": { "C": 20, "B": 20, "A": 20, "S": 10, "SSR": 10 },
+    "normalStarStep": 0.1,
+    "normalTrainingStep": 0.03,
+    "ssrStarStep": 0.2,
+    "ssrTrainingStep": 0.04,
+    "trainingCosts": [4, 7, 11, 16, 22, 29, 37, 46, 56, 67],
+    "effectiveAttributeFormula": "round(base * (1 + starStep * (stars - 1) + trainingStep * training)) + flatTreasureBonus",
+    "sellPricePerStar": { "C": 2, "B": 3, "A": 5, "S": 8, "SSR": 16 }
+  },
+  "income": {
+    "winBase": 4,
+    "lossBase": 7,
+    "administrationThreshold": 50,
+    "administrationStep": 18,
+    "administrationCap": 4,
+    "administrationFormula": "clamp(floor(((chancellorScore * 0.65 + quartermasterScore * 0.35) - 50) / 18) + talentIncome, 0, 4)",
+    "interestGoldStep": 15,
+    "interestCap": 3,
+    "stageFiveWinBonus": 2,
+    "endlessWinBase": 3,
+    "endlessWinStep": 3,
+    "endlessWinInterval": 2,
+    "totalFormula": "resultBase + administration + interest + stageFiveBonus + endlessBonus + winIncome + policyIncome"
+  },
+  "battle": {
+    "derivedStats": {
+      "discipline": "round(command * 0.55 + intelligence * 0.25 + force * 0.20)",
+      "logistics": "round(politics * 0.50 + intelligence * 0.30 + charisma * 0.20)",
+      "range": [1, 150]
+    },
+    "positionWeights": {
+      "lord": { "command": 0.2, "force": 0.05, "intelligence": 0.05, "politics": 0.15, "charisma": 0.5, "discipline": 0.05 },
+      "chancellor": { "command": 0.05, "intelligence": 0.2, "politics": 0.45, "charisma": 0.1, "logistics": 0.2 },
+      "commander": { "command": 0.45, "force": 0.1, "intelligence": 0.1, "politics": 0.05, "charisma": 0.05, "discipline": 0.25 },
+      "strategist": { "command": 0.1, "intelligence": 0.55, "politics": 0.15, "charisma": 0.05, "discipline": 0.05, "logistics": 0.1 },
+      "vanguard": { "command": 0.15, "force": 0.6, "intelligence": 0.05, "charisma": 0.05, "discipline": 0.15 },
+      "quartermaster": { "command": 0.05, "intelligence": 0.1, "politics": 0.2, "charisma": 0.05, "discipline": 0.1, "logistics": 0.5 }
+    },
+    "phaseWeights": {
+      "planning": { "strategy": 0.65, "command": 0.2, "sustain": 0.15 },
+      "clash": { "attack": 0.5, "command": 0.3, "defense": 0.2 },
+      "attrition": { "defense": 0.45, "sustain": 0.35, "command": 0.2 }
+    },
+    "orders": {
+      "strongAttack": { "phase": "clash", "bonus": 0.12, "penaltyPhase": "planning", "penalty": -0.04, "counters": "trick" },
+      "trick": { "phase": "planning", "bonus": 0.12, "penaltyPhase": "attrition", "penalty": -0.04, "counters": "defend" },
+      "defend": { "phase": "attrition", "bonus": 0.12, "penaltyPhase": "clash", "penalty": -0.04, "counters": "strongAttack" }
+    },
+    "counterExtraBonus": 0.06,
+    "phaseModifierRange": [-0.3, 0.4],
+    "phaseRandomRange": [0.97, 1.03],
+    "enemyTeamRandomRange": [0.96, 1.04],
+    "majorWinRatio": 1.15,
+    "lordModifierFormula": "clamp((lordPositionScore - 55) * 0.0018, -0.03, 0.09)",
+    "factionBonus": { "same2": 0.02, "same4": 0.05, "same6": 0.09, "allFourFactions": 0.03 }
+  },
+  "stages": [
+    { "stage": 1, "name": "黄巾初阵", "strength": 0.88, "ratings": ["C", "B"], "orderBias": "strongAttack", "training": 0 },
+    { "stage": 2, "name": "汜水交锋", "strength": 0.94, "ratings": ["C", "B", "A"], "orderBias": "strongAttack", "training": 0 },
+    { "stage": 3, "name": "虎牢鏖战", "strength": 1.01, "ratings": ["B", "A"], "orderBias": "strongAttack", "training": 0 },
+    { "stage": 4, "name": "徐州攻防", "strength": 1.07, "ratings": ["B", "A"], "orderBias": "defend", "training": 1 },
+    { "stage": 5, "name": "官渡决断", "strength": 1.14, "lineup": ["B", "B", "B", "A", "A", "S"], "orderBias": "trick", "training": 1 },
+    { "stage": 6, "name": "荆襄风云", "strength": 1.18, "lineup": ["B", "B", "A", "A", "A", "S"], "orderBias": "random", "training": 1 },
+    { "stage": 7, "name": "赤壁烈火", "strength": 1.22, "lineup": ["B", "A", "A", "A", "S", "S"], "orderBias": "trick", "training": 2 },
+    { "stage": 8, "name": "汉中争夺", "strength": 1.2, "lineup": ["A", "A", "A", "A", "S", "S"], "orderBias": "defend", "training": 2, "twoStarCount": 2 },
+    { "stage": 9, "name": "夷陵连营", "strength": 1.23, "lineup": ["A", "A", "A", "S", "S", "S"], "orderBias": "defend", "training": 2, "twoStarCount": 4 },
+    { "stage": 10, "name": "天下归一", "strength": 1.26, "lineup": ["A", "A", "S", "S", "S", "S"], "orderBias": "random", "training": 3, "stars": 2, "enemySsrChancePerSlot": 0.3 }
+  ],
+  "supply": {
+    "visibleOffers": 3,
+    "refreshCost": 2,
+    "maxActiveBuffs": 3,
+    "items": [
+      { "name": "精锐甲胄", "cost": 5, "effect": "defense +10%", "duration": 1 },
+      { "name": "强弩齐射", "cost": 5, "effect": "attack +10%", "duration": 1 },
+      { "name": "锦囊妙计", "cost": 5, "effect": "strategy +10%", "duration": 1 },
+      { "name": "粮草充足", "cost": 4, "effect": "sustain +12%", "duration": 1 },
+      { "name": "号令严明", "cost": 6, "effect": "command +9%", "duration": 1 },
+      { "name": "斥候先行", "cost": 4, "effect": "reveal enemy order", "duration": 1 },
+      { "name": "背水一战", "cost": 8, "effect": "all phases +12% at 1 health", "duration": 1 },
+      { "name": "犒赏三军", "cost": 7, "effect": "all phases +4%", "duration": 2 },
+      { "name": "休养生息", "cost": 6, "effect": "train two random starters once for free" },
+      { "name": "招贤榜", "cost": 5, "effect": "next draft contains at least two A+" }
+    ]
+  },
+  "events": {
+    "baseChance": 0.7,
+    "missBonus": 0.15,
+    "maxChance": 0.95,
+    "successBaseChance": 0.65,
+    "successMinChance": 0.3,
+    "successMaxChance": 0.92,
+    "safeGold": 4,
+    "successGoldMin": 8,
+    "successGoldMax": 14,
+    "treasureChance": 0.18,
+    "tradeCost": 4
+  },
+  "shop": {
+    "itemCount": 4,
+    "refreshCost": 3,
+    "goldBag": { "cost": 5, "minGold": 3, "maxGold": 10 },
+    "treasureRarityWeights": { "普通": 70, "史诗": 24, "传说": 6, "神话": 1 },
+    "heroShop": { "refreshCost": 4, "aPrice": 14, "sPrice": 24, "thirdSlotSChance": 0.3 }
+  },
+  "meta": {
+    "meritByMainStage": { "5": 50, "6": 60, "7": 70, "8": 80, "9": 90, "10": 200 },
+    "meritPerEndlessWin": 50,
+    "upgradeCosts": {
+      "startGold": [80, 150, 250, 400, 600],
+      "draftRate": [100, 180, 300, 450, 650],
+      "interestCap": [250, 500, 800, 1200, 1600],
+      "trainingBoost": [150, 300, 500],
+      "policyOffers": [500],
+      "benchSeat": [180, 350, 600, 900, 1300],
+      "treasureSlot": [200, 400, 700]
+    },
+    "unlockDrawCosts": { "policy": 500, "treasure": 300, "role": 200 }
+  }
+}

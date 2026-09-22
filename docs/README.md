@@ -6,6 +6,7 @@
 - [第四版等级与羁绊效果](v4-tier-and-bond-effect-proposal.md)：当前等级分布、属性区间和羁绊经济方案。
 - [球员与羁绊完整目录](player-and-bond-catalog.md)：由正式游戏数据自动生成的可读目录。
 - [参考游戏玩法拆解](reference-gameplay.md)：《三国群雄十策》的玩法观察和借鉴范围。
+- [参考游戏核心玩法数据](three-kingdoms-core-gameplay-data.md)：《三国群雄十策》2.5.4 的招募、经济、训练、对战、关卡与局外成长实数。
 - [2026-09-22 更新日志](update-log-2026-09-22.md)：第四版等级、技能、羁绊与界面集中更新。
 - [2026-09-21 更新日志](update-log-2026-09-21.md)：第一轮集中开发记录。
 
@@ -15,6 +16,7 @@
 - `data/my-game-bonds.csv`：正式羁绊数据。
 - `data/three-kingdoms-characters.csv`：参考游戏角色汇总。
 - `data/three-kingdoms-bonds.csv`：参考游戏羁绊及效果汇总。
+- `data/three-kingdoms-core-rules.json`：参考游戏 2.5.4 核心规则的结构化数据。
 - `data/proposed-player-tiers.csv`：第四版等级调整记录。
 
 ## 历史归档

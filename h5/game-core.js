@@ -1,4 +1,4 @@
-/* 《我的球星融合系统》第二版规则与状态。数值为游戏设计值，并非真实 NBA 统计。 */
+/* 《我的球星融合系统》第四版规则与状态。数值为游戏设计值，并非真实 NBA 统计。 */
 (function (root) {
   'use strict';
 
@@ -31,7 +31,7 @@
   const STARS = STAR_ROWS.map(r => ({
     id:r[0],name:r[1],tier:r[2],role:r[3],team:r[4],best:r[5],
     attrs:Object.fromEntries(ATTRS.map((a,i)=>[a,r[6][i]])),talent:r[7],talentEffect:DATA.TALENT_DETAILS[r[0]],variantOf:r[8]||null,
-    maxStars:r[2]==='L'?5:3,maxTrain:r[2]==='L'?5:3
+    maxStars:r[2]==='SSR'?5:3,maxTrain:r[2]==='SSR'?5:3
   }));
   const BY_ID = Object.fromEntries(STARS.map(s=>[s.id,s]));
   const FOES = ['giannis','irving','tatum','harden','durant','davis','jokic','kawhi','jordan','lebron'];
@@ -48,9 +48,20 @@
     { id:'ring', name:'冠军戒指', price:18, attr:'all', gain:2, description:'永久全属性 +2' },
     { id:'band', name:'防守护臂', price:9, attr:'def', gain:4, description:'永久防守 +4' }
   ];
-  const tierValue = { C:0, B:1, A:2, S:3, L:4 };
+  const tierValue = { C:0, B:1, A:2, S:3, SSR:4 };
   function saleValue(id){const star=BY_ID[id];return star?Math.max(3,tierValue[star.tier]+2):0}
-  function recruitCost(run){return run.talent==='agent'?6:8}
+  function resolveTalentEffect(run,slotId){
+    const star=BY_ID[run.slots[slotId]],base=star?.talentEffect;
+    if(!star||!base?.slots?.includes(slotId))return null;
+    const specific=base.slotEffects?.[slotId];
+    return specific?{...base,...specific,stats:{...(base.stats||{}),...(specific.stats||{})}}:base;
+  }
+  function activeTalentEffects(run){return SLOTS.map(slot=>resolveTalentEffect(run,slot.id)).filter(Boolean)}
+  function recruitCost(run){
+    const base=run.talent==='agent'?6:8;
+    const discount=activeTalentEffects(run).reduce((sum,effect)=>sum+(effect.recruitDiscount||0),0);
+    return Math.max(1,base-discount);
+  }
   const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
 
   function nextRandom(run){run.rng=(Math.imul(run.rng,1664525)+1013904223)>>>0;return run.rng/4294967296}
@@ -77,23 +88,23 @@
   function tierOdds(run){
     const stage=Math.max(1,run.stage||1),step=Math.min(4,Math.floor((stage-1)/2));
     const tables=[
-      {C:45,B:40,A:14.5,S:.5,L:0},
-      {C:34,B:40,A:22,S:3.5,L:.5},
-      {C:25,B:38,A:28,S:8,L:1},
-      {C:17,B:34,A:33,S:13.5,L:2.5},
-      {C:10,B:28,A:36,S:21,L:5}
+      {C:45,B:40,A:14.5,S:.5,SSR:0},
+      {C:34,B:40,A:22,S:3.5,SSR:.5},
+      {C:25,B:38,A:28,S:8,SSR:1},
+      {C:17,B:34,A:33,S:13.5,SSR:2.5},
+      {C:10,B:28,A:36,S:21,SSR:5}
     ];
     const odds={...tables[step]};
-    if(stage>10){const extra=Math.min(7,(stage-10)*.35);odds.L+=extra;odds.S+=extra*.5;odds.C=Math.max(2,odds.C-extra);odds.B-=extra*.5}
+    if(stage>10){const extra=Math.min(7,(stage-10)*.35);odds.SSR+=extra;odds.S+=extra*.5;odds.C=Math.max(2,odds.C-extra);odds.B-=extra*.5}
     const bonus=clamp(run.rarityBonus||0,0,10);
-    odds.L+=bonus*.25;odds.S+=bonus*.5;odds.A+=bonus*.25;odds.C=Math.max(0,odds.C-bonus);
+    odds.SSR+=bonus*.25;odds.S+=bonus*.5;odds.A+=bonus*.25;odds.C=Math.max(0,odds.C-bonus);
     const total=Object.values(odds).reduce((sum,value)=>sum+value,0);
     odds.B+=100-total;
     return odds;
   }
   function tierRoll(run){
     const odds=tierOdds(run),n=nextRandom(run)*100;
-    let cursor=odds.L;if(n<cursor)return 'L';
+    let cursor=odds.SSR;if(n<cursor)return 'SSR';
     cursor+=odds.S;if(n<cursor)return 'S';
     cursor+=odds.A;if(n<cursor)return 'A';
     cursor+=odds.B;return n<cursor?'B':'C';
@@ -176,8 +187,8 @@
     return value;
   }
   function playerScore(star,own,key){return star.attrs[key]+(own.stars-1)*3+own.train*3}
-  function fused(run){
-    const stats={},talents=[];
+  function fused(run,strategy=''){
+    const stats={},talents=[],talentEffects=[],bonds=activeSynergies(run),talentPercents=Object.fromEntries(ATTRS.map(attr=>[attr,0]));
     for(const attr of ATTRS){
       let sum=0,weight=0;
       for(const slot of SLOTS){
@@ -188,23 +199,31 @@
       stats[attr]=weight?Math.round(sum/weight):0;
     }
     for(const slot of SLOTS){
-      const id=run.slots[slot.id],star=BY_ID[id];
-      if(star&&star.best===slot.id){stats[star.talentEffect.attr]+=star.talentEffect.gain;talents.push(star)}
+      const id=run.slots[slot.id],star=BY_ID[id],effect=resolveTalentEffect(run,slot.id);
+      if(!star||!effect)continue;
+      if(effect.all)for(const attr of ATTRS)talentPercents[attr]+=effect.all;
+      for(const [attr,percent] of Object.entries(effect.stats||{}))talentPercents[attr]+=percent;
+      if(effect.slotStat)talentPercents[slot.id]+=effect.slotStat;
+      for(const [attr,percent] of Object.entries(effect.strategyStats?.[strategy]||{}))talentPercents[attr]+=percent;
+      if(effect.bondScale)talentPercents[effect.bondScale.attr]+=Math.min(effect.bondScale.max,bonds.length*effect.bondScale.per);
+      talents.push(star);
+      talentEffects.push(effect);
     }
-    for(const bond of activeSynergies(run))for(const [attr,gain] of Object.entries(bond.effect?.stats||{[bond.attr]:bond.gain}))stats[attr]+=gain;
+    for(const attr of ATTRS)stats[attr]=Math.round(stats[attr]*(1+talentPercents[attr]/100));
+    for(const bond of bonds)for(const [attr,gain] of Object.entries(bond.effect?.stats||{[bond.attr]:bond.gain}))stats[attr]+=gain;
     if(run.talent==='outside'){stats.three+=5;stats.handle+=5;stats.inside-=3}
     if(run.talent==='inside'){stats.inside+=7;stats.def+=3;stats.three-=3}
     if(run.talent==='defense')stats.def+=7;
     for(const itemId of run.gear){const item=GEAR.find(g=>g.id===itemId);if(!item)continue;if(item.attr==='all')for(const a of ATTRS)stats[a]+=item.gain;else stats[item.attr]+=item.gain}
     for(const boostId of run.boosts){const item=BOOSTS.find(b=>b.id===boostId);if(!item)continue;if(item.attr==='all')for(const a of ATTRS)stats[a]+=item.gain;else stats[item.attr]+=item.gain}
-    for(const key of ATTRS)stats[key]=clamp(Math.round(stats[key]),0,110);
+    for(const key of ATTRS)stats[key]=clamp(Math.round(stats[key]),0,150);
     const rating=Math.round(ATTRS.reduce((n,a)=>n+stats[a],0)/ATTRS.length);
-    return {stats,rating,bonds:activeSynergies(run),talents};
+    return {stats,rating,bonds,talents,talentEffects};
   }
   function opponent(run){
     const id=FOES[(run.stage-1)%FOES.length],star=BY_ID[id];
     const diff=run.stage<=10?(-11+run.stage*2):(9+(run.stage-10)*2.1);
-    const stats=Object.fromEntries(ATTRS.map(a=>[a,clamp(Math.round(star.attrs[a]+diff),35,110)]));
+    const stats=Object.fromEntries(ATTRS.map(a=>[a,clamp(Math.round(star.attrs[a]+diff),35,150)]));
     const strategy=star.best==='three'?'outside':star.best==='drive'?'drive':'collapse';
     return {id,name:star.name,strategy,stats,rating:Math.round(ATTRS.reduce((n,a)=>n+stats[a],0)/ATTRS.length)};
   }
@@ -231,7 +250,7 @@
   }
   function battle(game,strategy){
     const run=game.run;if(!run||run.ended||run.lastBattle||starterCount(run)<6||!STRATEGIES[strategy])return null;
-    const own=fused(run),foe=opponent(run);let us=0,them=0,turn='us',round=0;
+    const own=fused(run,strategy),foe=opponent(run);let us=0,them=0,turn='us',round=0;
     const beats=STRATEGIES[strategy].beats===foe.strategy?1:STRATEGIES[foe.strategy].beats===strategy?-1:0;
     const log=[];
     while(round<90){
@@ -257,14 +276,19 @@
     }
     if(us===them){if(own.rating+beats*4>=foe.rating)us++;else them++}
     const won=us>them;
+    const postBattleCash=own.talentEffects.reduce((sum,effect)=>sum+(effect.postBattleCash||0),0);
     let reward=0,detail=[];
     if(won){
       const base=6+Math.floor(run.stage/2)-(run.talent==='defense'?1:0)+(run.talent==='economy'?2:0);
       const interest=Math.min(run.talent==='economy'?4:3,Math.floor(run.cash/10));
-      const bond=own.bonds.length?1:0,bondCash=own.bonds.reduce((sum,item)=>sum+(item.effect?.winCash||0),0);
-      reward=base+interest+bond+bondCash;run.cash+=reward;run.wins++;detail=[`胜利 ${base}`,`利息 ${interest}`,`羁绊 ${bond+bondCash}`];
+      const bond=own.bonds.length?1:0,bondCash=Math.min(5,own.bonds.reduce((sum,item)=>sum+(item.effect?.winCash||0),0));
+      const talentCash=own.talentEffects.reduce((sum,effect)=>sum+(effect.winCash||0),0);
+      reward=base+interest+bond+bondCash+talentCash+postBattleCash;run.cash+=reward;run.wins++;detail=[`胜利 ${base}`,`利息 ${interest}`,`羁绊 ${bond+bondCash}`];
+      if(talentCash)detail.push(`球星技能 ${talentCash}`);
+      if(postBattleCash)detail.push(`战后技能 ${postBattleCash}`);
     }else{
-      run.morale--;run.losses++;reward=3+(run.talent==='defense'?2:0);run.cash+=reward;detail=[`失败补偿 ${reward}`];
+      run.morale--;run.losses++;reward=3+(run.talent==='defense'?2:0)+postBattleCash;run.cash+=reward;detail=[`失败补偿 ${reward-postBattleCash}`];
+      if(postBattleCash)detail.push(`战后技能 ${postBattleCash}`);
     }
     run.boosts=[];
     const report={stage:run.stage,won,us,them,reward,detail,log:log.slice(-7),strategy,foe:foe.id,foeName:foe.name,foeStrategy:foe.strategy,beats,rating:own.rating,foeRating:foe.rating};
@@ -279,8 +303,10 @@
     if(run.stage===10&&choice==='finish'){run.lastBattle.legendEarned=finishRun(game);return true}
     if(run.stage===10)run.endless=true;
     const bonds=activeSynergies(run);
-    run.stage++;run.free=1;
-    run.cash+=bonds.reduce((sum,item)=>sum+(item.effect?.stageCash||0),0);
+    const bondFree=Math.min(2,bonds.reduce((sum,item)=>sum+(item.effect?.freeRecruit||0),0));
+    const bondCash=Math.min(5,bonds.reduce((sum,item)=>sum+(item.effect?.stageCash||0),0));
+    run.stage++;run.free=1+bondFree;
+    run.cash+=bondCash;
     run.refreshFree=1;run.offer=[];run.lastBattle=null;
     return true;
   }

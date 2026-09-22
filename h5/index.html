@@ -70,7 +70,7 @@
     .cash-price,.shop-balance{display:inline-flex;align-items:center;justify-content:center;gap:3px}.cash-price img{width:20px;height:15px;object-fit:contain}.shop-balance img{width:25px;height:19px;object-fit:contain}.profile-title-row{display:flex;align-items:center;justify-content:space-between;gap:12px}.profile-title-row .title{margin-bottom:0}.profile-home{border:1px solid #775527;border-radius:7px;background:#2e271e;color:#ffd072;padding:9px 12px;font-size:10px;font-weight:950;white-space:nowrap}.home-new{background:#292725!important;color:#ffc45a!important;border:1px solid #70542e!important;box-shadow:none!important}.home-continue{background:linear-gradient(95deg,#ff7600,#ffb300)!important;color:#1a1205!important}
     .draft-bond-hints{position:absolute;z-index:2;left:9px;right:58px;top:31px;display:flex;flex-direction:column;align-items:flex-start;gap:3px}.draft-bond-hints i{max-width:100%;padding:2px 4px;border:1px solid #83704d;border-radius:3px;background:#181817cc;color:#e7d5ab;font-size:7px;font-style:normal;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.draft-bond-hints i.active{border-color:#3d9e62;background:#173b25;color:#73e59b}.slots-heading{align-items:center}.slots-heading>span{color:#c3ae87;font-size:10px}.fusion-lineup .slot-body i.triple{font-size:10px;letter-spacing:-.05em}.detail-bonds>div.active{border:1px solid #3a9b5e;background:#1c3023;box-shadow:0 0 0 1px #3a9b5e33}.detail-bonds>div.active strong,.detail-bonds>div.active strong small{color:#72e69a}.detail-bonds>div>p{display:flex;flex-wrap:wrap;gap:4px;margin:7px 0}.detail-bonds em{padding:2px 4px;border:1px solid #4e4d49;border-radius:3px;color:#8f8d88;font-size:9px;font-style:normal}.detail-bonds em.owned{border-color:#39915a;background:#183523;color:#72df94}.profile-tabs{position:relative;display:grid;grid-template-columns:1fr 1fr;margin:18px 0 10px;padding:3px;border:1px solid #514535;border-radius:9px;background:#222}.profile-tabs button{position:relative;z-index:1;border:0;background:transparent;color:#aaa49a;padding:9px;font-size:11px;font-weight:950}.profile-tabs button.active{color:#1c1308}.profile-tabs i{position:absolute;top:3px;bottom:3px;left:3px;width:calc(50% - 3px);border-radius:6px;background:linear-gradient(95deg,#ff8b0b,#ffbd2f);transition:transform .2s}.profile-tabs i.bonds{transform:translateX(100%)}.profile-bond-catalog{display:grid;gap:7px}.profile-bond{padding:10px;border:1px solid #44413c;border-radius:7px;background:#252525;color:#777}.profile-bond strong{display:flex;justify-content:space-between;color:#b5afa5;font-size:11px}.profile-bond strong small{font-size:9px;color:#8e887e}.profile-bond>span{display:block;margin-top:5px;font-size:9px}.profile-bond.unlocked{border-color:#92702d;background:#332b1d;color:#d9c9a8}.profile-bond.unlocked strong,.profile-bond.unlocked strong small{color:#ffd064}
     @media(max-width:380px){.fusion-lineup{grid-template-columns:minmax(0,1fr) 72px minmax(0,1fr);gap:4px}.lineup-column{gap:4px}.fusion-lineup .slot-top b{font-size:6px}.fusion-lineup .slot-body i{width:21px;min-width:21px;height:24px;font-size:10px}.fusion-lineup .slot-body strong{font-size:8px}.fusion-lineup .slot-body small{font-size:6px}.roster-resources small{font-size:9px}}
-      /* 等级视觉：统一深色底，仅以边框、文字和轻微内阴影区分 C / B / A / S / SR。 */
+      /* 等级视觉：统一深色底，仅以边框、文字和轻微内阴影区分 C / B / A / S / SSR。 */
     .tier-c{--tier-glow:#aeb8c21f}.tier-b{--tier-glow:#4b8fc92b}.tier-a{--tier-glow:#8e63b730}.tier-s{--tier-glow:#c6a83d2b}.tier-legend{--tier-glow:#9a568832}
     .card.tier-c,.card.tier-b,.card.tier-a,.card.tier-s,.card.tier-legend,
     .fusion-lineup .slot.tier-c,.fusion-lineup .slot.tier-b,.fusion-lineup .slot.tier-a,.fusion-lineup .slot.tier-s,.fusion-lineup .slot.tier-legend,
@@ -81,7 +81,91 @@
     .card .card-visual{background:#242424;box-shadow:inset 0 0 30px var(--tier-glow)}
     .player-detail .detail-head{background:#242526;box-shadow:inset 0 -12px 22px var(--tier-glow)}
     .tier-legend.card,.fusion-lineup .slot.tier-legend,.bench-card.tier-legend,.catalog span.tier-legend,.modal-card.tier-legend{background:#202123 padding-box,linear-gradient(105deg,#8f344a,#89671f,#28684e,#2b6388,#684080) border-box}
-    .tier-legend .card-visual,.tier-legend .card-top,.tier-legend .slot-top,.tier-legend .bench-top{background:#242526;box-shadow:inset 0 0 22px var(--tier-glow)}</style>
+    .tier-legend .card-visual,.tier-legend .card-top,.tier-legend .slot-top,.tier-legend .bench-top{background:#242526;box-shadow:inset 0 0 22px var(--tier-glow)}
+
+    /* 第四版卡片细节：等级栏融入卡面，SSR 使用明亮钻石色。 */
+    .tier-legend{--tier:#79e7ff;--tier-bg:#163b4a;--tier-dark:#d9faff;--tier-card:linear-gradient(145deg,#18506a,#292552 58%,#17424d);--tier-glow:#72e8ff55}
+    .legend-dot{background:linear-gradient(135deg,#5bdcff,#efffff 42%,#9cbcff 68%,#d2adff)}
+    .card .card-top,.fusion-lineup .slot .slot-top,.bench-card .bench-top{background:transparent;box-shadow:none}
+    .tier-legend.card,.fusion-lineup .slot.tier-legend,.bench-card.tier-legend,.catalog span.tier-legend,.modal-card.tier-legend{border-color:transparent;background:linear-gradient(145deg,#17475a,#292442 62%,#143640) padding-box,linear-gradient(135deg,#55d9ff,#f2ffff 38%,#91b8ff 68%,#d3aaff) border-box;box-shadow:inset 0 0 26px #6ee8ff35,0 2px 8px #0008}
+    .tier-legend.card .card-visual{background:linear-gradient(145deg,#1d5a70,#302953 70%);box-shadow:inset 0 0 34px #8defff55}
+    .tier-legend .card-top,.tier-legend .slot-top,.tier-legend .bench-top{background:transparent;box-shadow:none}
+    .tier-legend .card-top .rarity{background:linear-gradient(135deg,#59dcff,#eaffff 48%,#a78cff);color:#102734}
+    .tier-legend.card.selected{outline:3px solid #eaffff;outline-offset:1px;box-shadow:0 0 0 5px #68e5ff55,0 0 25px #71e8ffb0,inset 0 0 28px #9df3ff44}
+    .fusion-lineup .slot.tier-legend,.bench-card.tier-legend{background:linear-gradient(145deg,#1b5369,#2d2854 65%,#17414c) padding-box,linear-gradient(135deg,#5fe0ff,#f1ffff 42%,#a992ff) border-box}
+
+    /* 融合面板卡片：名字为主，属性值与技能合并到第二行。 */
+    .fusion-lineup .slot-body{padding:7px 5px;background:transparent;align-items:center}
+    .fusion-lineup .slot-body strong{width:100%;font-size:10px;line-height:1.2}
+    .fusion-lineup .slot-body small{margin-top:4px;font-size:7px;line-height:1.2;color:#ddd5c8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .fusion-lineup .slot-body .slot-value{color:var(--tier);font-size:11px;font-weight:1000;text-shadow:0 0 8px var(--tier-glow)}
+    .fusion-lineup .slot.empty .slot-body{min-height:42px}
+    .fusion-lineup .slot.empty .slot-body strong{color:#aaa49a}
+
+    /* 战术羁绊弹窗：标题固定，列表单独滚动。 */
+    .bonds-modal{max-height:85vh;overflow:hidden;display:flex;flex-direction:column;padding:0}
+    .bonds-modal .modal-head{flex:0 0 auto;padding:16px 18px 3px;background:#242424;z-index:2}
+    .bonds-modal .modal-head h2{margin:0}
+    .bonds-modal .bond-summary{flex:0 0 auto;margin:0;padding:2px 18px 9px;background:#242424;color:#d7cbb7;line-height:1.3}
+    .bonds-modal .bond-list{min-height:0;overflow-y:auto;overscroll-behavior:contain;margin:0;padding:0 18px 18px;scrollbar-gutter:stable}
+    #roster{padding-top:62px}
+
+    /* 第五版卡片细节：等级标识融入卡面，并强化可点击与选中反馈。 */
+    .card .card-top .rarity,.tier-legend .card-top .rarity{background:transparent;color:var(--tier);padding:3px 0;box-shadow:none}
+    .card-select{cursor:pointer}.card-meta,.card-effect{cursor:pointer}
+    .card-detail{cursor:pointer}
+    .card .visual-number{color:color-mix(in srgb,var(--tier) 82%,white);opacity:.78;text-shadow:0 0 14px var(--tier-glow)}
+    .card.tier-c{--selected-border:#f4f7fa}.card.tier-b{--selected-border:#55adf2}.card.tier-a{--selected-border:#b985ea}.card.tier-s{--selected-border:#ffd75f}.card.tier-legend{--selected-border:#eaffff}
+    .card.selected{border-color:var(--selected-border);outline:3px solid var(--selected-border);outline-offset:0;box-shadow:0 0 0 2px #0008}
+    .card.tier-s.selected{box-shadow:0 0 0 3px #e5b93345,0 0 22px #ffd44f99,inset 0 0 24px #d4aa3045}
+    .card.tier-legend.selected{outline:3px solid var(--selected-border);outline-offset:0;box-shadow:0 0 0 4px #68e5ff55,0 0 25px #71e8ffb0,inset 0 0 28px #9df3ff44}
+
+    /* 融合卡片：金色位置标题、等级水印，以及技能后的等级星级。 */
+    .fusion-lineup .slot{position:relative;isolation:isolate}
+    .fusion-lineup .slot-tier-watermark{position:absolute;z-index:0;right:8px;top:50%;transform:translateY(-50%) skewX(-10deg);color:var(--tier);font-family:Arial Black,Arial,sans-serif;font-size:60px;font-weight:1000;font-style:oblique 16deg;line-height:1;letter-spacing:-.12em;opacity:.28;text-shadow:0 0 14px var(--tier-glow);pointer-events:none}
+    .fusion-lineup .slot-top,.fusion-lineup .slot-body{position:relative;z-index:1}
+    .fusion-lineup .slot-top{color:#ffd264;font-weight:1000}
+    .fusion-lineup .slot-body small{white-space:normal;overflow:visible;text-overflow:clip}
+    .fusion-lineup .slot-rank,.fusion-lineup .slot-rank .star-icon{color:#ffd264;font-weight:1000}
+
+    /* 球员详情：所有层级统一使用当前等级色，去掉割裂的底部色带。 */
+    .modal-card.player-detail{border:1px solid color-mix(in srgb,var(--tier) 78%,white);background:linear-gradient(155deg,color-mix(in srgb,var(--tier) 14%,#34363a),#292b2f 48%,color-mix(in srgb,var(--tier) 8%,#303237));box-shadow:0 18px 45px #000c,inset 0 0 34px var(--tier-glow)}
+    .player-detail .detail-head{position:relative;margin:0 -16px 15px;padding:17px 16px 16px;background:linear-gradient(135deg,color-mix(in srgb,var(--tier) 24%,#303238),color-mix(in srgb,var(--tier) 8%,#292b2f) 62%,#25272a);border-bottom:1px solid color-mix(in srgb,var(--tier) 55%,transparent);box-shadow:none;overflow:hidden}
+    .player-detail .detail-head:after{content:"";position:absolute;right:-36px;top:-58px;width:150px;height:150px;border:22px solid color-mix(in srgb,var(--tier) 18%,transparent);border-radius:50%;pointer-events:none}
+    .player-detail .detail-head>div,.player-detail .detail-head>button{position:relative;z-index:1}
+    .player-detail .detail-head>div>span,.player-detail .detail-section>span{color:color-mix(in srgb,var(--tier) 82%,white)}
+    .player-detail .detail-head h2{color:#fff;text-shadow:0 2px 8px #0008}
+    .player-detail .detail-head small{color:color-mix(in srgb,var(--tier) 30%,#f5eee3)}
+    .player-detail .detail-head button{color:color-mix(in srgb,var(--tier) 68%,#ffd36a)}
+    .player-detail .detail-stats{border-color:color-mix(in srgb,var(--tier) 48%,#555);background:color-mix(in srgb,var(--tier) 8%,#333539)}
+    .player-detail .detail-stats div{background:linear-gradient(145deg,color-mix(in srgb,var(--tier) 13%,#36383b),#2f3134);border-color:color-mix(in srgb,var(--tier) 28%,#4f5052)}
+    .player-detail .detail-stats span{color:color-mix(in srgb,var(--tier) 42%,#d7d4ce)}
+    .player-detail .detail-stats b{color:color-mix(in srgb,var(--tier) 72%,#fff1bd);text-shadow:0 0 10px var(--tier-glow)}
+    .player-detail .detail-section{border-color:color-mix(in srgb,var(--tier) 38%,#555);background:linear-gradient(145deg,color-mix(in srgb,var(--tier) 10%,#323437),#2a2c2f)}
+    .player-detail .detail-section h3{color:color-mix(in srgb,var(--tier) 48%,white)}
+    .player-detail .detail-section p{color:#d0cbc3}
+    .player-detail .fit-list b{border:1px solid color-mix(in srgb,var(--tier) 34%,transparent);background:color-mix(in srgb,var(--tier) 16%,#32302a);color:color-mix(in srgb,var(--tier) 68%,#ffe7a6)}
+    .player-detail .detail-bonds>div{background:color-mix(in srgb,var(--tier) 9%,#323437);border:1px solid color-mix(in srgb,var(--tier) 24%,#505154)}
+    .player-detail .detail-bonds>div.active{border-color:#42aa68;background:#1d3525;box-shadow:0 0 0 1px #42aa6838}
+
+    /* SSR 详情使用明亮钻石渐变，而不是单一青色。 */
+    .modal-card.player-detail.tier-legend{border:1px solid transparent;background:linear-gradient(150deg,#163c50,#242b50 52%,#37294d) padding-box,linear-gradient(135deg,#56dcff,#f0ffff 34%,#8abaff 65%,#d7a9ff) border-box;box-shadow:0 18px 48px #000d,inset 0 0 38px #72e8ff42}
+    .player-detail.tier-legend .detail-head{background:linear-gradient(125deg,#15536b 0%,#284a70 42%,#403664 76%,#563653 100%);border-bottom-color:#9cefff;box-shadow:inset 0 0 28px #a1f2ff24}
+    .player-detail.tier-legend .detail-head:after{border-color:#c8f8ff42;box-shadow:0 0 0 18px #a98fff1c}
+    .player-detail.tier-legend .detail-head>div>span,.player-detail.tier-legend .detail-section>span{color:#9ff2ff;text-shadow:0 0 9px #6ce7ff88}
+    .player-detail.tier-legend .detail-head small{color:#d7edff}
+    .player-detail.tier-legend .detail-head button{color:#e5ffff;text-shadow:0 0 10px #75eaff}
+    .player-detail.tier-legend .detail-stats{border-color:#9beeff;background:linear-gradient(135deg,#183d50,#322d50)}
+    .player-detail.tier-legend .detail-stats div{background:linear-gradient(145deg,#244a59,#30324f 62%,#3b2d4d);border-color:#8fdff070}
+    .player-detail.tier-legend .detail-stats span{color:#c6ebf5}
+    .player-detail.tier-legend .detail-stats b{color:#b6f7ff;text-shadow:0 0 12px #6de7ffb5}
+    .player-detail.tier-legend .detail-section{border-color:#8de9f6a8;background:linear-gradient(145deg,#214653,#292f4a 58%,#382d49);box-shadow:inset 0 0 20px #8cecff18}
+    .player-detail.tier-legend .detail-section h3{color:#dffcff}
+    .player-detail.tier-legend .fit-list b{border-color:#9debf2aa;background:linear-gradient(120deg,#315662,#3a3b59);color:#c9faff}
+    .player-detail.tier-legend .detail-bonds>div{border-color:#92dfea88;background:linear-gradient(135deg,#29454e,#32354d)}
+    .player-detail.tier-legend .detail-bonds>div.active{border-color:#53e59a;background:linear-gradient(135deg,#1d4b3b,#263f4d);box-shadow:0 0 12px #4ce29444}
+    #roster .bond-heading{margin-top:2px}
+    </style>
 </head>
 <body>
 <div class="app home-mode">
@@ -107,10 +191,10 @@
     <button class="inline-back" data-screen="roster">← 返回融合球场</button>
     <div class="draft-heading"><div><span class="league-label">HOOP LEGEND</span><h1>DRAFT <small>招募</small></h1></div><div class="draft-stage">⚑ STAGE 01/10</div></div>
     <div class="draft-round"><strong>DRAFT ROUND</strong><span>本轮选秀</span><small>⟳ 免费刷新：1 次</small></div>
-    <div class="draft-odds"><span class="tier-dot legend-dot"></span>SR 0% <span class="tier-dot s-dot"></span>S 0.5% <span class="tier-dot a-dot"></span>A 14.5% <span class="tier-dot b-dot"></span>B 35% <span class="tier-dot c-dot"></span>C 50% <b>概率随关卡提高</b></div>
+    <div class="draft-odds"><span class="tier-dot legend-dot"></span>SSR 0% <span class="tier-dot s-dot"></span>S 0.5% <span class="tier-dot a-dot"></span>A 14.5% <span class="tier-dot b-dot"></span>B 35% <span class="tier-dot c-dot"></span>C 50% <b>概率随关卡提高</b></div>
     <div class="choicegrid" id="recruitChoices">
       <button class="card tier-s selected" data-value="斯蒂芬·库里"><div class="card-top"><span class="rarity">S · PG</span><span>三分位</span></div><div class="card-visual"><span class="visual-number">30</span><span class="visual-role">THE SHOOTER</span><h3>斯蒂芬·库里</h3><p>金州 · 外线核心</p></div><div class="card-meta"><span>推荐 · 三分位</span><b>三分 96</b></div><div class="card-effect">◎ 天赋：超远射程</div><div class="card-impact">预计融合提升 <b>+12</b></div></button>
-      <button class="card tier-legend" data-value="勒布朗·詹姆斯"><div class="card-top"><span class="rarity">SR · SF</span><span>突破位</span></div><div class="card-visual"><span class="visual-number">23</span><span class="visual-role">THE KING</span><h3>勒布朗·詹姆斯</h3><p>全能锋线 · 攻筐组织</p></div><div class="card-meta"><span>推荐 · 突破位</span><b>突破 95</b></div><div class="card-effect">◎ 天赋：强势攻筐</div><div class="card-impact">预计融合提升 <b>+11</b></div></button>
+      <button class="card tier-legend" data-value="勒布朗·詹姆斯"><div class="card-top"><span class="rarity">SSR · SF</span><span>突破位</span></div><div class="card-visual"><span class="visual-number">23</span><span class="visual-role">THE KING</span><h3>勒布朗·詹姆斯</h3><p>全能锋线 · 攻筐组织</p></div><div class="card-meta"><span>推荐 · 突破位</span><b>突破 95</b></div><div class="card-effect">◎ 天赋：强势攻筐</div><div class="card-impact">预计融合提升 <b>+11</b></div></button>
       <button class="card tier-a" data-value="凯里·欧文"><div class="card-top"><span class="rarity">A · PG</span><span>控球位</span></div><div class="card-visual"><span class="visual-number">11</span><span class="visual-role">THE HANDLES</span><h3>凯里·欧文</h3><p>运控大师 · 单打专家</p></div><div class="card-meta"><span>推荐 · 控球位</span><b>控球 93</b></div><div class="card-effect">◎ 天赋：节奏变化</div><div class="card-impact">预计融合提升 <b>+8</b></div></button>
       <button class="card tier-b" data-value="德里克·怀特"><div class="card-top"><span class="rarity">B · G</span><span>防守位</span></div><div class="card-visual"><span class="visual-number">09</span><span class="visual-role">THE GUARD</span><h3>德里克·怀特</h3><p>攻守兼备 · 外线屏障</p></div><div class="card-meta"><span>推荐 · 防守位</span><b>防守 88</b></div><div class="card-effect">◎ 天赋：追身封盖</div><div class="card-impact">预计融合提升 <b>+6</b></div></button>
     </div>
@@ -127,7 +211,7 @@
     <div class="slots roster-slots" id="slots">
       <button class="slot tier-s" data-slot="三分"><span class="slot-top">三分位 · 3PT <b>S · 2★</b></span><span class="slot-body"><i>30</i><strong id="slot-three">斯蒂芬·库里<small>库里 · 射手引力</small></strong></span></button>
       <button class="slot tier-a" data-slot="中投"><span class="slot-top">中投位 · MID <b>A · 1★</b></span><span class="slot-body"><i>24</i><strong>科比·布莱恩特<small>中距离大师</small></strong></span></button>
-      <button class="slot tier-legend" data-slot="突破"><span class="slot-top">突破位 · SLC <b>SR · 1★</b></span><span class="slot-body"><i>23</i><strong>勒布朗·詹姆斯<small>全能锋线</small></strong></span></button>
+      <button class="slot tier-legend" data-slot="突破"><span class="slot-top">突破位 · SLC <b>SSR · 1★</b></span><span class="slot-body"><i>23</i><strong>勒布朗·詹姆斯<small>全能锋线</small></strong></span></button>
       <button class="slot tier-a" data-slot="控球"><span class="slot-top">控球位 · AST <b>A · 2★</b></span><span class="slot-body"><i>11</i><strong>凯里·欧文<small>控球大师</small></strong></span></button>
       <button class="slot tier-b" data-slot="篮下"><span class="slot-top">篮下位 · INSIDE <b>B · 1★</b></span><span class="slot-body"><i>21</i><strong>蒂姆·邓肯<small>低位专家</small></strong></span></button>
       <button class="slot tier-s" data-slot="防守"><span class="slot-top">防守位 · DEF <b>S · 1★</b></span><span class="slot-body"><i>02</i><strong>科怀·伦纳德<small>铁血防线</small></strong></span></button>

@@ -1,6 +1,6 @@
 # 《三国群雄十策》与《我的球星融合系统》角色羁绊设计对比
 
-> 分析依据：`three-kingdoms-characters.csv`、`three-kingdoms-bonds.csv`、`my-game-players.csv`、`my-game-bonds.csv`。三国表来自参考截图，可辨认 116 名角色和 76 组羁绊，仍缺少截图外的 3 组双人羁绊；三国表没有效果数值，因此本文只比较关系结构和构筑逻辑，不评价其羁绊数值强弱。
+> 版本说明：本文记录第二版 60 名基础球员、40 组羁绊时期的重构依据，保留用于版本对比。当前方案请结合 [第四版等级与羁绊效果正式方案](../v4-tier-and-bond-effect-proposal.md) 阅读。
 
 ## 一、结论
 

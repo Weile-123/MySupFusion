@@ -1,4 +1,4 @@
-/* 第二版球星与羁绊数据。数值为游戏策划值，不代表真实比赛统计。 */
+/* 第四版球星与羁绊数据。数值为游戏策划值，不代表真实比赛统计。 */
 (function (root, factory) {
   'use strict';
   const data=factory();
@@ -36,9 +36,9 @@
     ['nash','史蒂夫·纳什','A','PG','太阳','handle',[91,92,78,98,55,79,68,62],'大师传球'],
     ['rodman','丹尼斯·罗德曼','B','PF','公牛','rebound',[45,63,75,62,77,78,92,99],'篮板狂人'],
     ['gobert','鲁迪·戈贝尔','B','C','森林狼','def',[35,59,61,58,78,89,96,97],'护框专家'],
-    ['anunoby','OG·阿奴诺比','C','SF','尼克斯','def',[79,76,78,72,65,76,87,77],'侧翼防线'],
-    ['caruso','亚历克斯·卡鲁索','C','G','雷霆','def',[76,73,76,80,58,73,88,70],'拼抢先锋'],
-    ['lopez','布鲁克·洛佩兹','C','C','雄鹿','inside',[78,73,55,57,82,86,86,82],'高塔投射'],
+    ['anunoby','OG·阿奴诺比','C','SF','尼克斯','drive',[79,76,78,72,65,76,87,77],'侧翼防线'],
+    ['caruso','亚历克斯·卡鲁索','C','G','雷霆','handle',[76,73,76,80,58,73,88,70],'拼抢先锋'],
+    ['lopez','布鲁克·洛佩兹','C','C','雄鹿','three',[78,73,55,57,82,86,86,82],'高塔投射'],
     ['magic','埃尔文·约翰逊','S','PG','湖人','handle',[82,88,93,99,86,95,84,83],'魔术传球'],
     ['bird','拉里·伯德','S','SF','凯尔特人','mid',[93,96,82,91,91,92,87,92],'预言绝杀'],
     ['kareem','卡里姆·阿卜杜尔-贾巴尔','S','C','湖人','post',[38,92,78,79,99,99,94,97],'天勾'],
@@ -52,7 +52,7 @@
     ['kidd','贾森·基德','A','PG','篮网','handle',[86,88,80,98,70,78,93,88],'全场视野'],
     ['malone','卡尔·马龙','A','PF','爵士','post',[32,88,84,73,97,96,88,95],'强硬终结'],
     ['stockton','约翰·斯托克顿','A','PG','爵士','handle',[87,89,75,99,55,72,91,60],'挡拆手术刀'],
-    ['bosh','克里斯·波什','A','PF','热火','inside',[83,88,80,76,89,93,84,88],'空间内线'],
+    ['bosh','克里斯·波什','A','PF','热火','mid',[83,88,80,76,89,93,84,88],'空间内线'],
     ['parker','托尼·帕克','B','PG','马刺','handle',[72,92,94,95,55,88,73,55],'陀螺突破'],
     ['ginobili','马努·吉诺比利','B','SG','马刺','drive',[86,88,93,91,62,86,82,65],'欧洲步'],
     ['pau','保罗·加索尔','B','PF','湖人','post',[75,91,72,82,94,94,87,94],'高位策应'],
@@ -61,7 +61,7 @@
     ['howard','德怀特·霍华德','A','C','魔术','inside',[35,62,88,67,90,99,96,99],'魔兽空接'],
     ['carter','文斯·卡特','A','SG','猛龙','drive',[88,91,97,88,72,95,76,70],'世纪扣篮'],
     ['melo','卡梅隆·安东尼','A','SF','掘金','mid',[83,96,88,84,91,91,72,72],'三威胁'],
-    ['butler','吉米·巴特勒','A','SF','热火','def',[78,91,92,88,82,90,95,82],'硬仗模式'],
+    ['butler','吉米·巴特勒','A','SF','热火','drive',[78,91,92,88,82,90,95,82],'硬仗模式'],
     ['george','保罗·乔治','A','SF','快船','three',[90,89,88,86,75,87,94,82],'攻防侧翼'],
     ['bowen','布鲁斯·鲍文','C','SF','马刺','def',[86,72,65,68,55,70,96,68],'贴身压迫'],
     ['battier','肖恩·巴蒂尔','C','SF','热火','def',[87,77,70,74,68,76,95,74],'遮眼防守'],
@@ -73,28 +73,28 @@
     ['tmac','特雷西·麦克格雷迪','A','SF','魔术','mid',[86,96,94,91,82,91,75,69],'干拔时刻'],
     ['doncic','卢卡·东契奇','S','PG','独行侠','handle',[90,94,91,99,88,94,79,88],'节奏掌控'],
     ['isiah','伊赛亚·托马斯','S','PG','活塞','handle',[84,92,94,98,62,87,86,58],'微笑刺客'],
-    ['dumars','乔·杜马斯','A','SG','活塞','def',[87,88,82,88,65,82,96,66],'沉默锁链'],
-    ['laimbeer','比尔·兰比尔','B','C','活塞','def',[77,73,55,66,88,89,94,94],'强硬禁区'],
+    ['dumars','乔·杜马斯','A','SG','活塞','mid',[87,88,82,88,65,82,96,66],'沉默锁链'],
+    ['laimbeer','比尔·兰比尔','B','C','活塞','three',[77,73,55,66,88,89,94,94],'强硬禁区'],
     ['robinson','大卫·罗宾逊','S','C','马刺','def',[48,86,88,79,96,98,98,99],'海军上将'],
     ['ewing','帕特里克·尤因','S','C','尼克斯','inside',[46,90,80,72,96,98,95,97],'纽约支柱'],
     ['iguodala','安德烈·伊戈达拉','B','SF','勇士','def',[79,77,84,86,75,82,94,82],'死亡拼图'],
-    ['harper','罗恩·哈珀','B','PG','公牛','def',[73,79,84,83,70,82,91,77],'高大后卫'],
+    ['harper','罗恩·哈珀','B','PG','公牛','handle',[73,79,84,83,70,82,91,77],'高大后卫'],
     ['longley','卢克·朗利','C','C','公牛','inside',[28,65,48,60,82,87,82,86],'中路屏障'],
     ['fisher','德里克·费舍尔','B','PG','湖人','three',[88,80,68,82,54,72,82,60],'关键零点四'],
-    ['fox','里克·福克斯','C','SF','湖人','def',[80,75,72,75,68,76,88,72],'侧翼粘合'],
+    ['fox','里克·福克斯','C','SF','湖人','mid',[80,75,72,75,68,76,88,72],'侧翼粘合'],
     ['byron_scott','拜伦·斯科特','B','SG','湖人','three',[89,84,85,82,61,81,78,60],'快攻终结'],
     ['worthy','詹姆斯·沃西','A','SF','湖人','drive',[66,88,95,83,84,94,82,77],'大赛眼镜蛇'],
     ['ac_green','AC·格林','C','PF','湖人','def',[58,72,68,65,80,84,85,92],'铁人篮板'],
-    ['griffin','布雷克·格里芬','A','PF','快船','inside',[72,83,94,80,88,97,76,90],'暴力起飞'],
+    ['griffin','布雷克·格里芬','A','PF','快船','drive',[72,83,94,80,88,97,76,90],'暴力起飞'],
     ['deandre','德安德烈·乔丹','B','C','快船','inside',[20,48,71,55,80,95,91,98],'空接终点'],
     ['mchale','凯文·麦克海尔','S','PF','凯尔特人','inside',[36,92,78,73,98,98,94,96],'低位万花筒'],
     ['parish','罗伯特·帕里什','A','C','凯尔特人','inside',[30,83,69,62,92,94,91,96],'酋长镇守'],
     ['love','凯文·乐福','A','PF','骑士','three',[88,85,68,80,89,88,76,96],'长传炮台'],
     ['reggie','雷吉·米勒','S','SG','步行者','three',[97,88,82,83,56,79,74,58],'米勒时刻'],
     ['amare','阿马雷·斯塔德迈尔','A','PF','太阳','inside',[58,85,95,72,88,98,73,88],'太阳风暴'],
-    ['marion','肖恩·马里昂','A','SF','太阳','def',[76,75,89,77,82,89,95,94],'骇客全能'],
+    ['marion','肖恩·马里昂','A','SF','太阳','drive',[76,75,89,77,82,89,95,94],'骇客全能'],
     ['murray','贾马尔·穆雷','A','PG','掘金','mid',[89,94,88,91,60,83,74,60],'季后赛升温'],
-    ['aaron_gordon','阿隆·戈登','B','PF','掘金','inside',[74,77,91,74,82,93,88,91],'高空协防'],
+    ['aaron_gordon','阿隆·戈登','B','PF','掘金','drive',[74,77,91,74,82,93,88,91],'高空协防'],
     ['wilkins','多米尼克·威尔金斯','S','SF','老鹰','drive',[74,91,99,85,83,98,78,82],'人类电影精华'],
     ['wilt','威尔特·张伯伦','S','C','湖人','inside',[20,78,91,73,99,100,95,100],'百分神迹'],
     ['russell','比尔·拉塞尔','S','C','凯尔特人','def',[20,68,77,72,90,93,100,100],'冠军基石'],
@@ -102,10 +102,10 @@
     ['west','杰里·韦斯特','S','SG','湖人','mid',[91,96,91,94,65,88,91,70],'标志原型'],
     ['baylor','埃尔金·贝勒','S','SF','湖人','drive',[69,91,97,87,86,96,80,87],'空中先驱'],
     ['moses','摩西·马龙','S','C','76人','inside',[22,78,76,67,96,99,91,100],'进攻篮板王'],
-    ['barkley','查尔斯·巴克利','S','PF','太阳','inside',[69,88,92,86,92,98,84,98],'空中飞猪'],
+    ['barkley','查尔斯·巴克利','S','PF','太阳','drive',[69,88,92,86,92,98,84,98],'空中飞猪'],
     ['drexler','克莱德·德雷克斯勒','A','SG','开拓者','drive',[80,88,96,87,75,93,84,85],'滑翔机'],
     ['mullin','克里斯·穆林','A','SF','勇士','mid',[92,94,78,84,72,85,76,67],'左手神射'],
-    ['payton','加里·佩顿','A','PG','超音速','def',[83,88,85,94,68,84,98,72],'手套压迫'],
+    ['payton','加里·佩顿','A','PG','超音速','handle',[83,88,85,94,68,84,98,72],'手套压迫'],
     ['kemp','肖恩·坎普','A','PF','超音速','inside',[42,78,96,70,87,98,83,96],'雨人暴扣'],
     ['penny','安芬尼·哈达威','A','PG','魔术','handle',[83,90,93,97,76,90,84,74],'便士魔法'],
     ['grant_hill','格兰特·希尔','A','SF','活塞','drive',[78,90,96,92,82,92,87,89],'全能前锋'],
@@ -121,53 +121,99 @@
     ['shai','谢伊·吉尔杰斯-亚历山大','S','SG','雷霆','drive',[85,95,98,96,76,94,93,76],'节奏切割'],
     ['edwards','安东尼·爱德华兹','A','SG','森林狼','drive',[86,89,98,90,74,95,88,83],'蚁人升空'],
 
-    // 传奇异名卡：与基础球员共享羁绊身份，拥有更高面板与 5 星/5 级成长上限。
-    ['king_lebron','皇帝·詹姆斯','L','SF','巅峰传奇','drive',[91,95,105,102,94,104,96,98],'君临全场','lebron'],
-    ['air_jordan','飞人·乔丹','L','SG','巅峰传奇','mid',[89,106,106,99,95,105,104,92],'制空绝杀','jordan'],
-    ['mamba_kobe','黑曼巴·科比','L','SG','巅峰传奇','mid',[93,105,98,96,91,97,94,80],'曼巴时刻','kobe'],
-    ['chef_curry','厨神·库里','L','PG','巅峰传奇','three',[108,98,90,103,56,81,79,67],'引力领域','curry'],
-    ['diesel_shaq','大鲨鱼·奥尼尔','L','C','巅峰传奇','inside',[35,77,91,78,106,110,99,108],'禁区粉碎','shaq'],
-    ['showtime_magic','魔术师·约翰逊','L','PG','巅峰传奇','handle',[89,95,100,109,93,102,92,91],'表演时刻','magic'],
-    ['big_ticket_garnett','狼王·加内特','L','PF','巅峰传奇','def',[82,98,91,85,103,102,108,108],'怒吼统治','garnett'],
-    ['dream_hakeem','大梦·奥拉朱旺','L','C','巅峰传奇','def',[34,96,90,85,108,107,110,107],'梦幻迷宫','hakeem'],
-    ['greek_giannis','希腊怪兽·字母哥','L','PF','巅峰传奇','drive',[73,86,109,94,96,110,104,104],'一人成军','giannis'],
-    ['reaper_durant','死神·杜兰特','L','SF','巅峰传奇','mid',[101,108,94,92,93,103,91,86],'无差别终结','durant']
+    // SSR 异名卡：与基础球员共享羁绊身份，拥有更高面板与 5 星/5 级成长上限。
+    ['king_lebron','天选·詹姆斯','SSR','SF','巅峰传奇','drive',[99,108,125,110,121,112],'霸王踏步','lebron'],
+    ['air_jordan','GOAT·乔丹','SSR','SG','巅峰传奇','mid',[94,125,121,106,113,120],'神之领域','jordan'],
+    ['mamba_kobe','黑曼巴·科比','SSR','SG','巅峰传奇','mid',[108,120,117,108,108,117],'曼巴时刻','kobe'],
+    ['chef_curry','三分王·库里','SSR','PG','巅峰传奇','three',[125,118,111,118,99,91],'三分引力','curry'],
+    ['diesel_shaq','大鲨鱼·奥尼尔','SSR','C','巅峰传奇','inside',[85,94,97,90,128,125],'禁区粉碎','shaq'],
+    ['showtime_magic','魔术师·约翰逊','SSR','PG','巅峰传奇','handle',[91,104,110,125,111,103],'表演时刻','magic'],
+    ['reaper_durant','死神·杜兰特','SSR','SF','巅峰传奇','mid',[116,122,115,109,112,105],'死神终结','durant']
   ];
 
   const ATTRS=['three','mid','drive','handle','inside','def'];
   const LABELS={three:'三分',mid:'中投',drive:'突破',handle:'控球',inside:'篮下',def:'防守'};
   const TIER_RULES={
-    C:{min:45,max:82,main:78,talent:2},
-    B:{min:48,max:88,main:83,talent:2},
-    A:{min:54,max:94,main:89,talent:3},
+    C:{min:45,max:81,main:78},
+    B:{min:48,max:88,main:83},
+    A:{min:54,max:94,main:89},
     S:{min:60,max:99,main:95,talent:4},
-    L:{min:78,max:112,main:108,talent:5}
+    SSR:{min:85,max:128,main:120}
   };
   const BEST_MAP={post:'inside',inside:'inside',rebound:'def'};
   function scaleAttribute(value,tier){
-    const rule=TIER_RULES[tier],inputMax=tier==='L'?110:100;
+    const rule=TIER_RULES[tier],inputMax=tier==='SSR'?110:100;
     const normalized=(Math.max(20,Math.min(inputMax,value))-20)/(inputMax-20);
     return Math.round(rule.min+normalized*(rule.max-rule.min));
   }
+  const S_TIER_IDS=new Set(['curry','lebron','kobe','duncan','durant','shaq','jordan','magic','bird','kareem','hakeem','wilt','russell','harden']);
+  const A_TIER_IDS=new Set(['jokic','kawhi','giannis','dirk','garnett','doncic','isiah','robinson','ewing','mchale','reggie','wilkins','oscar','west','baylor','moses','barkley','erving','shai','wade','iverson','nash','paul','kidd','stockton','malone','pippen','davis','embiid','howard','tmac','rayallen']);
+  const C_TIER_IDS=new Set([...RAW_STAR_ROWS.filter(row=>row[2]==='C').map(row=>row[0]),'fisher']);
+  function reassignedTier(row){
+    if(row[2]==='SSR')return 'SSR';
+    if(S_TIER_IDS.has(row[0]))return 'S';
+    if(A_TIER_IDS.has(row[0]))return 'A';
+    if(C_TIER_IDS.has(row[0]))return 'C';
+    return 'B';
+  }
   const STAR_ROWS=RAW_STAR_ROWS.map(row=>{
-    const raw=row[6],tier=row[2],best=BEST_MAP[row[5]]||row[5];
-    const six=[raw[0],raw[1],raw[2],raw[3],Math.round(raw[4]*.45+raw[5]*.55),Math.round(raw[6]*.72+raw[7]*.28)]
+    const raw=row[6],tier=reassignedTier(row),best=BEST_MAP[row[5]]||row[5];
+    const six=tier==='SSR'?raw.slice(0,6):[raw[0],raw[1],raw[2],raw[3],Math.round(raw[4]*.45+raw[5]*.55),Math.round(raw[6]*.72+raw[7]*.28)]
       .map(value=>scaleAttribute(value,tier));
     const bestIndex=ATTRS.indexOf(best);
     six[bestIndex]=Math.max(six[bestIndex],TIER_RULES[tier].main);
     return [row[0],row[1],tier,row[3],row[4],best,six,row[7],row[8]||null];
   });
-  // 名人堂与传奇的推荐属性按原始强弱排序后铺满目标区间，避免实际卡池只占到区间上半段。
-  for(const tier of ['S','L']){
+  // 各等级推荐属性按原始强弱排序后铺满目标区间，保留同级球员之间的差异。
+  for(const tier of ['C','B','A','S']){
     const rule=TIER_RULES[tier],rows=STAR_ROWS.filter(row=>row[2]===tier).sort((a,b)=>
       a[6][ATTRS.indexOf(a[5])]-b[6][ATTRS.indexOf(b[5])]);
     rows.forEach((row,index)=>{
       row[6][ATTRS.indexOf(row[5])]=Math.round(rule.main+(rule.max-rule.main)*index/Math.max(1,rows.length-1));
     });
   }
+  const S_TALENT_DETAILS={
+    curry:{slots:['three'],stats:{three:14,def:-4},description:'安排在三分槽时，三分 +14%，防守 -4%'},
+    lebron:{slots:['drive','handle'],all:6,description:'安排在突破槽或控球槽时，全属性 +6%'},
+    kobe:{slots:['mid'],stats:{mid:12},description:'安排在中投槽时，中投 +12%'},
+    duncan:{slots:['inside','def'],slotEffects:{inside:{stats:{inside:11}},def:{stats:{def:6}}},description:'安排在篮下槽时，篮下 +11%；安排在防守槽时，防守 +6%'},
+    durant:{slots:['three','mid'],slotEffects:{three:{stats:{three:10},all:4},mid:{stats:{mid:8}}},description:'安排在三分槽时，三分 +10%、全属性 +4%；安排在中投槽时，中投 +8%'},
+    shaq:{slots:['inside'],stats:{inside:16},description:'安排在篮下槽时，篮下 +16%'},
+    jordan:{slots:['mid','drive'],slotEffects:{mid:{stats:{mid:10},all:5},drive:{stats:{drive:10}}},description:'安排在中投槽时，中投 +10%、全属性 +5%；安排在突破槽时，突破 +10%'},
+    harden:{slots:['handle','three'],slotEffects:{handle:{stats:{handle:10},strategyStats:{outside:{three:5}}},three:{stats:{three:6}}},description:'安排在控球槽时，控球 +10%，采用外线拉开时三分再 +5%；安排在三分槽时，三分 +6%'},
+    magic:{slots:['handle','drive'],slotEffects:{handle:{stats:{handle:6},postBattleCash:2,recruitDiscount:1},drive:{stats:{drive:6},postBattleCash:2}},description:'安排在控球槽时，控球 +6%、每次战后 +2 奖金、付费招募 -1；安排在突破槽时，突破 +6%、每次战后 +2 奖金'},
+    bird:{slots:['mid','three'],slotEffects:{mid:{all:6},three:{stats:{three:8}}},description:'安排在中投槽时，全属性 +6%；安排在三分槽时，三分 +8%'},
+    kareem:{slots:['inside','def'],slotEffects:{inside:{stats:{inside:12}},def:{stats:{def:8,three:-4}}},description:'安排在篮下槽时，篮下 +12%；安排在防守槽时，防守 +8%、三分 -4%'},
+    hakeem:{slots:['def','inside'],slotEffects:{def:{stats:{def:10}},inside:{stats:{inside:5},postBattleCash:2}},description:'安排在防守槽时，防守 +10%；安排在篮下槽时，篮下 +5%、每次战后 +2 奖金'},
+    wilt:{slots:['inside'],stats:{inside:14,handle:-4},description:'安排在篮下槽时，篮下 +14%，控球 -4%'},
+    russell:{slots:['def'],stats:{def:12},description:'安排在防守槽时，防守 +12%'}
+  };
+  // SSR 参考高稀有角色的双职责设计：主槽提供 22%–35% 专项强化，
+  // 再以 8%–12% 全属性、战术条件或经济效果形成不同构筑方向。
+  const SSR_TALENT_DETAILS={
+    king_lebron:{slots:['drive','handle'],slotEffects:{drive:{stats:{drive:25},all:12},handle:{stats:{handle:18},all:10}},description:'安排在突破槽时，突破 +25%、全属性 +12%；安排在控球槽时，控球 +18%、全属性 +10%'},
+    air_jordan:{slots:['mid','drive'],slotEffects:{mid:{stats:{mid:30},all:12},drive:{stats:{drive:30},all:12}},description:'安排在中投槽时，中投 +30%、全属性 +12%；安排在突破槽时，突破 +30%、全属性 +12%'},
+    mamba_kobe:{slots:['mid','drive'],slotEffects:{mid:{stats:{mid:28},all:10,strategyStats:{outside:{mid:10}}},drive:{stats:{drive:26},all:10,strategyStats:{drive:{mid:10}}}},description:'安排在中投槽时，中投 +28%、全属性 +10%，采用外线拉开时中投再 +10%；安排在突破槽时，突破 +26%、全属性 +10%，采用突破冲筐时中投再 +10%'},
+    chef_curry:{slots:['three','handle'],slotEffects:{three:{stats:{three:35},all:10,strategyStats:{outside:{handle:12}}},handle:{stats:{three:20,handle:20},all:8}},description:'安排在三分槽时，三分 +35%、全属性 +10%，采用外线拉开时控球再 +12%；安排在控球槽时，三分与控球各 +20%、全属性 +8%'},
+    diesel_shaq:{slots:['inside','def'],slotEffects:{inside:{stats:{inside:35},all:10},def:{stats:{inside:18,def:18},all:8}},description:'安排在篮下槽时，篮下 +35%、全属性 +10%；安排在防守槽时，篮下与防守各 +18%、全属性 +8%'},
+    showtime_magic:{slots:['handle','drive'],slotEffects:{handle:{stats:{handle:22},all:8,postBattleCash:3,recruitDiscount:1},drive:{stats:{drive:20},all:10,postBattleCash:2}},description:'安排在控球槽时，控球 +22%、全属性 +8%、每次战后 +3 奖金、付费招募 -1；安排在突破槽时，突破 +20%、全属性 +10%、每次战后 +2 奖金'},
+    reaper_durant:{slots:['mid','three'],slotEffects:{mid:{stats:{mid:28},all:12},three:{stats:{three:26},all:12}},description:'安排在中投槽时，中投 +28%、全属性 +12%；安排在三分槽时，三分 +26%、全属性 +12%'}
+  };
+  // 参考《群雄十策》A/B/C 普通角色的职位天赋：数值由职责类型决定，
+  // 稀有度差异由基础属性与获取成本承担。模板包含单项、双项与经济效果。
+  const ABC_TALENT_TEMPLATES={
+    three:{stats:{three:6},description:'安排在三分槽时，三分 +6%'},
+    mid:{stats:{mid:6},description:'安排在中投槽时，中投 +6%'},
+    drive:{stats:{drive:6},description:'安排在突破槽时，突破 +6%'},
+    handle:{stats:{},postBattleCash:1,description:'安排在控球槽时，每次战后额外获得 1 奖金'},
+    inside:{stats:{inside:10},description:'安排在篮下槽时，篮下 +10%'},
+    def:{stats:{def:5,handle:5},description:'安排在防守槽时，防守 +5%，控球 +5%'}
+  };
   const TALENT_DETAILS=Object.fromEntries(STAR_ROWS.map(row=>{
-    const attr=row[5],gain=TIER_RULES[row[2]].talent;
-    return [row[0],{attr,gain,description:`安排在${LABELS[attr]}槽时，${LABELS[attr]}额外 +${gain}`}];
+    const id=row[0],tier=row[2],attr=row[5];
+    if(tier==='S')return [id,{attr,...S_TALENT_DETAILS[id]}];
+    if(tier==='SSR')return [id,{attr,...SSR_TALENT_DETAILS[id]}];
+    return [id,{attr,slots:[attr],...ABC_TALENT_TEMPLATES[attr]}];
   }));
   function makeBond(id,name,ids,stats,extras={}){
     const effect={stats:{...stats},winCash:extras.winCash||0,stageCash:extras.stageCash||0,freeRecruit:extras.freeRecruit||0};
@@ -181,21 +227,21 @@
   const B=makeBond;
   const SYNERGIES = [
     // 44 组双人羁绊：优先真实搭档、宿敌、传承与同队关系。
-    B('splash','水花兄弟',['curry','klay'],{three:6,handle:1},{chainId:'warriors_death',chainLevel:1}),
+    B('splash','水花兄弟',['curry','klay'],{three:3,handle:1},{stageCash:1,chainId:'warriors_death',chainLevel:1}),
     B('warrior_brain','勇士轴心',['curry','green'],{handle:4,def:3},{chainId:'warriors_death',chainLevel:1}),
-    B('ok_combo','紫金OK',['kobe','shaq'],{inside:5,mid:3},{chainId:'ok_lakers',chainLevel:1}),
+    B('ok_combo','紫金OK',['kobe','shaq'],{inside:3,mid:1},{winCash:1,chainId:'ok_lakers',chainLevel:1}),
     B('mamba_pau','冠军内外线',['kobe','pau'],{inside:4,mid:3}),
-    B('laker_twin','湖人双核',['lebron','davis'],{inside:4,def:3}),
+    B('laker_twin','湖人双核',['lebron','davis'],{inside:2,def:1},{stageCash:1}),
     B('buck_champs','雄鹿冠军组',['giannis','holiday'],{drive:4,def:3}),
     B('celtic_guards','绿军双闸',['holiday','white'],{handle:3,def:4}),
-    B('buck_stars','雄鹿双星',['lillard','giannis'],{three:4,drive:4}),
+    B('buck_stars','雄鹿双星',['lillard','giannis'],{three:2,drive:2},{winCash:1}),
     B('phoenix_blades','太阳双刃',['durant','booker'],{mid:6,three:1}),
     B('process_battle','费城硬仗',['embiid','butler'],{inside:4,def:3}),
     B('wolves_core','狼群内外',['edwards','gobert'],{drive:4,def:3}),
     B('knicks_core','纽约双核',['anunoby','brunson'],{mid:3,def:4}),
     B('lake_show','湖人火花',['lebron','caruso'],{handle:3,def:4}),
     B('buck_towers','密城双塔',['giannis','lopez'],{inside:4,def:3}),
-    B('pick_roll','挡拆教科书',['stockton','malone'],{handle:4,inside:4}),
+    B('pick_roll','挡拆教科书',['stockton','malone'],{handle:2,inside:2},{stageCash:1}),
     B('spurs_heritage','圣城锋线传承',['bowen','kawhi'],{three:3,def:5}),
     B('heat_shield','热火侧翼屏障',['lebron','battier'],{drive:3,def:4}),
     B('mavs_wall','达拉斯冠军内线',['dirk','chandler'],{inside:4,def:3}),
@@ -211,62 +257,62 @@
     B('warrior_old_days','勇士旧梦',['mullin','webber'],{mid:4,handle:3}),
     B('sonics_duo','手套与雨人',['payton','kemp'],{handle:3,inside:4,def:2}),
     B('duke_wings','全能锋线传承',['grant_hill','tmac'],{mid:4,drive:4}),
-    B('yao_tmac','姚麦组合',['yao','tmac'],{mid:4,inside:4}),
+    B('yao_tmac','姚麦组合',['yao','tmac'],{mid:2,inside:2},{winCash:1}),
     B('pistons_backcourt','活塞后场双核',['billups','rip'],{handle:4,mid:4}),
     B('kings_duo','国王双核',['webber','peja'],{handle:4,three:4}),
     B('rondo_truth','波士顿新旧指挥',['rondo','pierce'],{handle:4,mid:3}),
     B('fo_fo_fo','费城冠军双核',['erving','moses'],{drive:4,inside:4}),
     B('thunder_mentor','雷霆师徒',['shai','paul'],{handle:4,drive:4}),
-    B('showtime_pair','表演时刻',['magic','kareem'],{handle:4,inside:4},{chainId:'showtime_lakers',chainLevel:1}),
-    B('mavs_origin','达拉斯双星',['dirk','nash'],{mid:4,handle:4}),
+    B('showtime_pair','表演时刻',['magic','kareem'],{handle:2,inside:2},{stageCash:1,chainId:'showtime_lakers',chainLevel:1}),
+    B('mavs_origin','达拉斯双星',['dirk','nash'],{mid:2,handle:2},{stageCash:1}),
     B('magic_bird','魔鸟争霸',['magic','bird'],{handle:4,mid:4}),
     B('jordan_kobe','飞人传承',['jordan','kobe'],{mid:4,drive:4}),
-    B('bad_boys_backcourt','坏孩子双枪',['isiah','dumars'],{handle:4,def:4},{chainId:'bad_boys',chainLevel:1}),
+    B('bad_boys_backcourt','坏孩子双枪',['isiah','dumars'],{handle:2,def:2},{winCash:1,chainId:'bad_boys',chainLevel:1}),
     B('finals_94','九四中锋决战',['hakeem','ewing'],{inside:4,def:4}),
     B('mavs_new_core','独行侠双核',['doncic','irving'],{handle:4,mid:4}),
-    B('nets_flight','篮网飞翼',['kidd','carter'],{handle:4,drive:4}),
+    B('nets_flight','篮网飞翼',['kidd','carter'],{handle:2,drive:2},{winCash:1}),
 
     // 17 组三人羁绊。
-    B('thunder_three','雷霆三少',['durant','westbrook','harden'],{drive:5,three:4,handle:3},{winCash:1,chainId:'thunder_three',chainLevel:2}),
-    B('heat_big_three','南海岸三巨头',['lebron','wade','bosh'],{drive:5,inside:4,def:3},{stageCash:1,chainId:'heat_big_three',chainLevel:2}),
-    B('celtic_big_three','绿军三巨头',['pierce','garnett','rayallen'],{mid:4,three:4,def:5},{chainId:'celtic_2008',chainLevel:2}),
-    B('bull_triangle','公牛铁三角',['jordan','pippen','rodman'],{def:6,mid:4,drive:3},{chainId:'bulls_dynasty',chainLevel:2}),
-    B('gdp','GDP',['duncan','parker','ginobili'],{inside:4,handle:4,def:5}),
-    B('nets_big_three','篮网三巨头',['durant','harden','irving'],{mid:4,three:4,handle:4},{winCash:1}),
-    B('lob_city','空接之城',['paul','griffin','deandre'],{handle:4,drive:4,inside:5},{chainId:'lob_city',chainLevel:2}),
-    B('celtic_dynasty','凯尔特人王朝',['bird','mchale','parish'],{mid:4,inside:5,def:5},{chainId:'celtic_80s',chainLevel:2}),
-    B('ok3','OK3',['westbrook','george','melo'],{drive:4,mid:4,three:4}),
-    B('mamba_students','曼巴门徒',['kobe','irving','tatum'],{mid:5,handle:4,drive:4}),
-    B('cavs_big_three','骑士三巨头',['lebron','irving','love'],{drive:4,three:4,inside:4},{stageCash:1}),
-    B('era_shooters','划时代射手',['reggie','rayallen','curry'],{three:8,mid:5}),
-    B('seven_seconds','7秒进攻',['nash','amare','marion'],{handle:5,inside:4,def:3},{stageCash:1,chainId:'seven_seconds',chainLevel:2}),
-    B('nuggets_core','掘金三核',['jokic','murray','aaron_gordon'],{handle:4,mid:4,inside:5}),
-    B('scoring_kaleidoscope','万花筒',['kobe','melo','durant'],{mid:6,three:3,drive:4}),
-    B('floor_generals','球场指挥官',['paul','kidd','nash'],{handle:7,mid:3,def:3}),
-    B('violent_dunkers','暴力扣将',['wilkins','carter','griffin'],{drive:7,inside:6}),
+    B('thunder_three','雷霆三少',['durant','westbrook','harden'],{drive:4,three:3,handle:2},{winCash:1,chainId:'thunder_three',chainLevel:2}),
+    B('heat_big_three','南海岸三巨头',['lebron','wade','bosh'],{drive:4,inside:3,def:2},{stageCash:1,chainId:'heat_big_three',chainLevel:2}),
+    B('celtic_big_three','绿军三巨头',['pierce','garnett','rayallen'],{mid:3,three:3,def:3},{winCash:1,chainId:'celtic_2008',chainLevel:2}),
+    B('bull_triangle','公牛铁三角',['jordan','pippen','rodman'],{def:4,mid:3,drive:2},{winCash:1,chainId:'bulls_dynasty',chainLevel:2}),
+    B('gdp','GDP',['duncan','parker','ginobili'],{inside:3,handle:3,def:4},{stageCash:1}),
+    B('nets_big_three','篮网三巨头',['durant','harden','irving'],{mid:3,three:3,handle:2},{winCash:1}),
+    B('lob_city','空接之城',['paul','griffin','deandre'],{handle:3,drive:3,inside:3},{winCash:1,chainId:'lob_city',chainLevel:2}),
+    B('celtic_dynasty','凯尔特人王朝',['bird','mchale','parish'],{mid:3,inside:3,def:4},{stageCash:1,chainId:'celtic_80s',chainLevel:2}),
+    B('ok3','OK3',['westbrook','george','melo'],{drive:3,mid:3,three:2},{winCash:1}),
+    B('mamba_students','曼巴门徒',['kobe','irving','tatum'],{mid:4,handle:3,drive:2},{stageCash:1}),
+    B('cavs_big_three','骑士三巨头',['lebron','irving','love'],{drive:3,three:3,inside:2},{stageCash:1}),
+    B('era_shooters','划时代射手',['reggie','rayallen','curry'],{three:6,mid:3},{stageCash:1}),
+    B('seven_seconds','7秒进攻',['nash','amare','marion'],{handle:3,inside:3,def:2},{stageCash:1,chainId:'seven_seconds',chainLevel:2}),
+    B('nuggets_core','掘金三核',['jokic','murray','aaron_gordon'],{handle:3,mid:3,inside:4},{stageCash:1}),
+    B('scoring_kaleidoscope','万花筒',['kobe','melo','durant'],{mid:4,three:2,drive:3},{winCash:1}),
+    B('floor_generals','球场指挥官',['paul','kidd','nash'],{handle:5,mid:2,def:2},{winCash:1}),
+    B('violent_dunkers','暴力扣将',['wilkins','carter','griffin'],{drive:5,inside:4},{winCash:1}),
 
     // 14 组四人羁绊。“香蕉船兄弟”替代错误的“03黄金一代”命名，保留用户指定成员。
-    B('four_shooting_guards','四大分位',['kobe','tmac','carter','iverson'],{mid:6,drive:6,handle:4,three:4}),
-    B('banana_boat','香蕉船兄弟',['lebron','wade','paul','melo'],{drive:5,handle:4,mid:3,inside:3},{stageCash:1}),
-    B('draft_96','96黄金一代',['kobe','iverson','nash','rayallen'],{three:6,handle:5,drive:4,mid:4}),
-    B('european_kings','欧洲天王',['dirk','pau','jokic','doncic'],{mid:6,handle:5,inside:5,three:4}),
-    B('bad_boys','坏孩子军团',['isiah','dumars','laimbeer','rodman'],{def:8,handle:4,inside:4,mid:3},{chainId:'bad_boys',chainLevel:2}),
+    B('four_shooting_guards','四大分位',['kobe','tmac','carter','iverson'],{mid:4,drive:4,handle:2,three:2},{winCash:2}),
+    B('banana_boat','香蕉船兄弟',['lebron','wade','paul','melo'],{drive:3,handle:2,mid:3,inside:2},{stageCash:3}),
+    B('draft_96','96黄金一代',['kobe','iverson','nash','rayallen'],{three:4,handle:3,drive:3,mid:3},{freeRecruit:1}),
+    B('european_kings','欧洲天王',['dirk','pau','jokic','doncic'],{mid:4,handle:3,inside:4,three:2},{freeRecruit:1}),
+    B('bad_boys','坏孩子军团',['isiah','dumars','laimbeer','rodman'],{def:5,handle:2,inside:2,mid:2},{winCash:2,chainId:'bad_boys',chainLevel:2}),
     B('four_centers','四大中锋',['hakeem','shaq','robinson','ewing'],{inside:8,def:8,mid:3}),
-    B('four_great_shooters','四大神射',['curry','reggie','klay','peja'],{three:9,mid:6,handle:4}),
-    B('spurs_pillars','圣城四柱',['duncan','kawhi','robinson','parker'],{def:8,inside:6,mid:3,handle:3}),
-    B('versatile_forwards','全能大前锋',['giannis','garnett','barkley','lebron'],{inside:6,drive:5,def:6,handle:3}),
-    B('lakers_generations','湖人四代核心',['magic','kareem','west','baylor'],{handle:5,inside:5,mid:5,drive:5}),
-    B('celtics_pillars','绿军四代基石',['bird','russell','mchale','garnett'],{def:7,inside:6,mid:5,three:2}),
-    B('scoring_legends','锋卫得分王',['jordan','wilkins','erving','durant'],{mid:5,drive:7,three:4,inside:4}),
-    B('rhythm_creators','节奏掌控者',['shai','oscar','harden','doncic'],{handle:7,drive:6,mid:4,three:3}),
-    B('paint_dominators','禁区统治者',['wilt','russell','moses','kareem'],{inside:9,def:8,mid:2}),
+    B('four_great_shooters','四大神射',['curry','reggie','klay','peja'],{three:6,mid:3,handle:2},{stageCash:2}),
+    B('spurs_pillars','圣城四柱',['duncan','kawhi','robinson','parker'],{def:5,inside:3,mid:2,handle:1},{winCash:2}),
+    B('versatile_forwards','全能大前锋',['giannis','garnett','barkley','lebron'],{inside:3,drive:3,def:3,handle:2},{winCash:2}),
+    B('lakers_generations','湖人四代核心',['magic','kareem','west','baylor'],{handle:3,inside:3,mid:3,drive:3},{stageCash:2}),
+    B('celtics_pillars','绿军四代基石',['bird','russell','mchale','garnett'],{def:5,inside:3,mid:3,three:1},{stageCash:2}),
+    B('scoring_legends','锋卫得分王',['jordan','wilkins','erving','durant'],{mid:3,drive:4,three:2,inside:2},{winCash:2}),
+    B('rhythm_creators','节奏掌控者',['shai','oscar','harden','doncic'],{handle:5,drive:3,mid:3,three:1},{winCash:2}),
+    B('paint_dominators','禁区统治者',['wilt','russell','moses','kareem'],{inside:9,def:8,mid:3}),
 
     // 5 组五人终局羁绊。
-    B('death_lineup','死亡五小',['curry','klay','iguodala','durant','green'],{three:7,handle:5,def:6,mid:4},{winCash:1,chainId:'warriors_death',chainLevel:3}),
-    B('bulls_dynasty','公牛王朝',['harper','jordan','pippen','rodman','longley'],{def:9,mid:6,drive:5,handle:4},{winCash:1,chainId:'bulls_dynasty',chainLevel:3}),
-    B('ok_dynasty','OK王朝',['fisher','kobe','fox','horry','shaq'],{inside:8,mid:6,three:5,def:4},{winCash:1,chainId:'ok_lakers',chainLevel:3}),
-    B('showtime_five','Showtime',['magic','byron_scott','worthy','ac_green','kareem'],{handle:8,inside:7,mid:5,drive:4},{stageCash:1,chainId:'showtime_lakers',chainLevel:3}),
-    B('final_answer','最终答案',['magic','jordan','lebron','duncan','shaq'],{handle:5,mid:5,drive:5,inside:6,def:5},{winCash:1})
+    B('death_lineup','死亡五小',['curry','klay','iguodala','durant','green'],{three:5,handle:3,def:4,mid:2,drive:1},{freeRecruit:2,chainId:'warriors_death',chainLevel:3}),
+    B('bulls_dynasty','公牛王朝',['harper','jordan','pippen','rodman','longley'],{def:6,mid:4,drive:3,handle:2},{stageCash:4,chainId:'bulls_dynasty',chainLevel:3}),
+    B('ok_dynasty','OK王朝',['fisher','kobe','fox','horry','shaq'],{inside:6,mid:5,three:4,def:3},{winCash:3,chainId:'ok_lakers',chainLevel:3}),
+    B('showtime_five','Showtime',['magic','byron_scott','worthy','ac_green','kareem'],{handle:6,inside:5,mid:3,drive:2},{stageCash:4,chainId:'showtime_lakers',chainLevel:3}),
+    B('final_answer','最终答案',['magic','jordan','lebron','duncan','shaq'],{handle:3,mid:3,drive:3,inside:3,def:3},{stageCash:4,winCash:3})
   ];
   return {ATTRS,LABELS,TIER_RULES,STAR_ROWS,TALENT_DETAILS,SYNERGIES};
 });

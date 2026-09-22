@@ -5,8 +5,8 @@
   const STORAGE=window.FusionStorage;
   const els=Object.fromEntries(['home','talent','recruit','roster','shop','duel','result','profile'].map(id=>[id,document.getElementById(id)]));
   let game=C.createGame(),screen='home',talentOffer=[],selectedTalent='',selectedOffer='',selectedPlace=null,showBonds=false,detailStar='',strategy='collapse',shopTab='training',profileTab='stars',saveQueue=Promise.resolve();
-  const tierName={L:'SR',S:'S',A:'A',B:'B',C:'C'};
-  const tierClass={L:'tier-legend',S:'tier-s',A:'tier-a',B:'tier-b',C:'tier-c'};
+  const tierName={SSR:'SSR',S:'S',A:'A',B:'B',C:'C'};
+  const tierClass={SSR:'tier-legend',S:'tier-s',A:'tier-a',B:'tier-b',C:'tier-c'};
   const attrOrder=['three','mid','drive','handle','inside','def'];
   const barColor={three:'bar-orange',mid:'bar-gold',drive:'bar-red',handle:'bar-blue',inside:'bar-orange',def:'bar-gold'};
   const $=id=>document.getElementById(id);
@@ -101,8 +101,8 @@
         foeName:foe.name,
         foeStrategy:C.opponent(run).strategy,
         beats:safeNumber(report.beats,-1,1,0),
-        rating:safeNumber(report.rating,0,110,0),
-        foeRating:safeNumber(report.foeRating,0,110,0),
+        rating:safeNumber(report.rating,0,150,0),
+        foeRating:safeNumber(report.foeRating,0,150,0),
         legendEarned:safeNumber(report.legendEarned,0,100000,0)
       };
     }
@@ -157,6 +157,7 @@
   }
   function draftBondHints(id){
     const identity=C.identityOf(id),owned=new Set(Object.keys(game.run.owned).map(C.identityOf));
+    if(owned.has(identity))return [];
     return C.starSynergies(id).map(bond=>{
       const ownedOthers=bond.ids.filter(player=>player!==identity&&owned.has(player)).length;
       if(!ownedOthers)return null;
@@ -166,7 +167,7 @@
   }
   function draftCard(id){
     const s=C.BY_ID[id],own=game.run.owned[id],duplicate=!!own,value=s.attrs[s.best],bondHints=draftBondHints(id);
-    return `<div class="card ${tierClass[s.tier]} ${selectedOffer===id?'selected':''}">
+    return `<div class="card ${tierClass[s.tier]} ${selectedOffer===id?'selected':''}" data-act="select-offer" data-id="${id}">
       <button class="card-select" data-act="select-offer" data-id="${id}"><span class="card-top"><span class="rarity">${tierName[s.tier]} · ${s.role}</span>${duplicate?`<span class="draft-upgrade">★ ${Math.min(s.maxStars,own.stars+1)}级</span>`:''}</span>
       <span class="card-visual"><span class="visual-number">${value}</span><span class="visual-role">${duplicate?'升星':'球星招募'}</span>${bondHints.length?`<span class="draft-bond-hints">${bondHints.map(b=>`<i class="${b.active?'active':''}">[${b.name}${b.active?'':` ${b.count}/${b.total}`}]</i>`).join('')}</span>`:''}<strong>${s.name}</strong><small>${s.talent}</small></span></button>
       <div class="card-meta"><span>推荐 · ${C.LABELS[s.best]}位</span><button class="card-detail" data-act="star-detail" data-id="${id}">查看详情</button></div>
@@ -181,16 +182,16 @@
     els.recruit.innerHTML=`
       <button class="inline-back" data-act="roster">← 返回融合球场</button>
       <div class="draft-heading"><div><span class="league-label">HOOP LEGEND</span><h1>DRAFT <small>招募</small></h1></div></div>
-      <div class="draft-odds"><span class="tier-dot legend-dot"></span>SR ${pct(odds.L)}% <span class="tier-dot s-dot"></span>S ${pct(odds.S)}% <span class="tier-dot a-dot"></span>A ${pct(odds.A)}% <span class="tier-dot b-dot"></span>B ${pct(odds.B)}% <span class="tier-dot c-dot"></span>C ${pct(odds.C)}%<b>当前 ${r.cash} 奖金</b></div>
+      <div class="draft-odds"><span class="tier-dot legend-dot"></span>SSR ${pct(odds.SSR)}% <span class="tier-dot s-dot"></span>S ${pct(odds.S)}% <span class="tier-dot a-dot"></span>A ${pct(odds.A)}% <span class="tier-dot b-dot"></span>B ${pct(odds.B)}% <span class="tier-dot c-dot"></span>C ${pct(odds.C)}%<b>当前 ${r.cash} 奖金</b></div>
       <div class="choicegrid">${r.offer.map(draftCard).join('')}</div>
       <div class="floatingaction"><button class="btn wide" data-act="pick" ${r.free<=0&&r.cash<C.recruitCost(r)?'disabled':''}>${r.free<=0&&r.cash<C.recruitCost(r)?'奖金不足，无法招募':'确定选入 '+(selected?selected.name:'')+' →'}</button></div>`;
   }
   function rosterSlot(slot,r){
     const id=r.slots[slot.id],s=C.BY_ID[id];
     const selected=selectedPlace?.kind==='slot'&&selectedPlace.key===slot.id?'selected':'';
-    if(!s)return `<button class="slot empty ${selected}" data-act="place" data-kind="slot" data-key="${slot.id}"><span class="slot-top">${slot.label}位 · ${slot.id.toUpperCase()}</span><span class="slot-body"><i>＋</i><strong>待招募<small>选择球员换入</small></strong></span></button>`;
-    return `<button class="slot ${tierClass[s.tier]} ${selected}" data-act="place" data-kind="slot" data-key="${slot.id}"><span class="slot-top">${slot.label}位 · ${slot.id.toUpperCase()} <b>${tierName[s.tier]} · ${r.owned[id].stars}★</b></span>
-      <span class="slot-body"><i class="${s.attrs[slot.id]>=100?'triple':''}">${s.attrs[slot.id]}</i><strong>${s.name}<small>${s.talent} · 训练 ${r.owned[id].train}/${s.maxTrain}</small></strong></span></button>`;
+    if(!s)return `<button class="slot empty ${selected}" data-act="place" data-kind="slot" data-key="${slot.id}"><span class="slot-top">${slot.label}位</span><span class="slot-body"><strong>待招募<small>选择球员换入</small></strong></span></button>`;
+    return `<button class="slot ${tierClass[s.tier]} ${selected}" data-act="place" data-kind="slot" data-key="${slot.id}"><span class="slot-tier-watermark">${tierName[s.tier]}</span><span class="slot-top">${slot.label}位</span>
+      <span class="slot-body"><strong>${s.name}<small><b class="slot-value">${s.attrs[slot.id]}</b> · ${s.talent} · <b class="slot-rank">${r.owned[id].stars}<span class="star-icon">★</span></b></small></strong></span></button>`;
   }
   function acePanel(r,fusion){
     return `<div class="ace-panel panel"><div class="ace-mark"><img src="assets/fusion-ace.png" alt="融合球员概念插画"><span>LV.${r.stage} 融合体</span></div>
@@ -244,7 +245,7 @@
   }
   function renderDuel(){
     const r=runOrHome();if(!r)return;
-    const foe=C.opponent(r),fusion=C.fused(r);
+    const foe=C.opponent(r),fusion=C.fused(r,strategy);
     els.duel.innerHTML=`<button class="inline-back" data-act="roster">← 返回融合球场</button>
       <div class="eyebrow">STAGE ${String(r.stage).padStart(2,'0')} · 赛前情报</div><h1 class="title">选择单挑策略</h1>
       <p class="lead">对手倾向「${C.STRATEGIES[foe.strategy].name}」。策略克制有优势，但球星属性和临场发挥仍决定结果。</p>
@@ -311,7 +312,7 @@
         Number(b.count===b.ids.length)-Number(a.count===a.ids.length)||b.count-a.count||a.index-b.index);
       modal.className='game-modal open';
       const activeCount=bonds.filter(b=>b.count===b.ids.length).length;
-      modal.innerHTML=`<div class="modal-card bonds-modal"><div class="modal-head"><h2>战术羁绊</h2><button data-act="close-bonds" aria-label="关闭">×</button></div><p>已激活 ${activeCount}/${bonds.length} · 已激活优先，其余按拥有球员数排序。</p><div class="bond-list">${bonds.map(b=>`<div class="bond-entry ${b.count===b.ids.length?'active':''}"><strong>${b.name}<small>${b.count}/${b.ids.length} · ${b.count===b.ids.length?'已激活':'未激活'}</small></strong><span>${b.ids.map(player=>`<em class="${owned.has(player)?'owned':''}">${C.BY_ID[player].name}</em>`).join('')}</span><b>${b.description}</b></div>`).join('')}</div></div>`;
+      modal.innerHTML=`<div class="modal-card bonds-modal"><div class="modal-head"><h2>战术羁绊</h2><button data-act="close-bonds" aria-label="关闭">×</button></div><p class="bond-summary">已激活 ${activeCount}/${bonds.length}</p><div class="bond-list">${bonds.map(b=>`<div class="bond-entry ${b.count===b.ids.length?'active':''}"><strong>${b.name}<small>${b.count}/${b.ids.length} · ${b.count===b.ids.length?'已激活':'未激活'}</small></strong><span>${b.ids.map(player=>`<em class="${owned.has(player)?'owned':''}">${C.BY_ID[player].name}</em>`).join('')}</span><b>${b.description}</b></div>`).join('')}</div></div>`;
       return;
     }
     if(!id){modal.className='game-modal';modal.innerHTML='';return}

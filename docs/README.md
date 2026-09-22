@@ -7,6 +7,7 @@
 - [球员与羁绊完整目录](player-and-bond-catalog.md)：由正式游戏数据自动生成的可读目录。
 - [参考游戏玩法拆解](reference-gameplay.md)：《三国群雄十策》的玩法观察和借鉴范围。
 - [参考游戏核心玩法数据](three-kingdoms-core-gameplay-data.md)：《三国群雄十策》2.5.4 的招募、经济、训练、对战、关卡与局外成长实数。
+- [两款游戏全系统对比](three-kingdoms-vs-my-sup-fusion-system-comparison.md)：逐系统列出参考规则、本游戏当前实现、差异状态与后续优先级。
 - [2026-09-22 更新日志](update-log-2026-09-22.md)：第四版等级、技能、羁绊与界面集中更新。
 - [2026-09-21 更新日志](update-log-2026-09-21.md)：第一轮集中开发记录。
 

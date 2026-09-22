@@ -49,7 +49,9 @@
     { id:'band', name:'防守护臂', price:9, attr:'def', gain:4, description:'永久防守 +4' }
   ];
   const tierValue = { C:0, B:1, A:2, S:3, SSR:4 };
-  function saleValue(id){const star=BY_ID[id];return star?Math.max(3,tierValue[star.tier]+2):0}
+  const SALE_BASE = { C:2, B:3, A:5, S:8, SSR:16 };
+  const TRAINING_COSTS = [4,7,11,16,22,29,37,46,56,67];
+  function saleValue(id,stars=1){const star=BY_ID[id];return star?SALE_BASE[star.tier]*clamp(Math.floor(stars)||1,1,star.maxStars):0}
   function resolveTalentEffect(run,slotId){
     const star=BY_ID[run.slots[slotId]],base=star?.talentEffect;
     if(!star||!base?.slots?.includes(slotId))return null;
@@ -68,7 +70,7 @@
   function randomChoice(run,arr){return arr[Math.floor(nextRandom(run)*arr.length)]}
   function createGame(){return { version:1, run:null, profile:{runs:0,wins:0,bestStage:0,bestEndless:0,legend:0,discovered:[],upgrades:{scouting:0}} }}
   function createRun(talent,seed,progress={}){
-    const run={seed:seed>>>0,rng:seed>>>0,talent,stage:1,endless:false,rarityBonus:clamp(progress.rarityBonus||0,0,10),morale:3,cash:16,free:6,refreshFree:1,owned:{},slots:Object.fromEntries(SLOTS.map(s=>[s.id,null])),bench:[],benchLimit:5,offer:[],pending:null,boosts:[],gear:[],wins:0,losses:0,lastBattle:null,ended:false,awarded:false};
+    const run={seed:seed>>>0,rng:seed>>>0,talent,stage:1,endless:false,rarityBonus:clamp(progress.rarityBonus||0,0,5),morale:3,cash:16,free:6,refreshFree:1,owned:{},slots:Object.fromEntries(SLOTS.map(s=>[s.id,null])),bench:[],benchLimit:5,offer:[],pending:null,boosts:[],gear:[],wins:0,losses:0,lastBattle:null,ended:false,awarded:false,recruitGroups:0,noAPlusGroups:0,noSPlusGroups:0,openingAPlusGroups:0};
     if(talent==='outside')run.free+=1;
     if(talent==='economy')run.free-=1;
     makeOffer(run);
@@ -85,41 +87,71 @@
     return completed.filter(bond=>!bond.chainId||(bond.chainLevel||0)===highest.get(bond.chainId));
   }
   function starSynergies(id){const identity=identityOf(id);return SYNERGIES.filter(s=>s.ids.includes(identity))}
+  function isOpeningRecruit(run){const groups=run.recruitGroups||0;return run.offer.length?groups<=6:groups<6}
   function tierOdds(run){
-    const stage=Math.max(1,run.stage||1),step=Math.min(4,Math.floor((stage-1)/2));
-    const tables=[
-      {C:45,B:40,A:14.5,S:.5,SSR:0},
-      {C:34,B:40,A:22,S:3.5,SSR:.5},
-      {C:25,B:38,A:28,S:8,SSR:1},
-      {C:17,B:34,A:33,S:13.5,SSR:2.5},
-      {C:10,B:28,A:36,S:21,SSR:5}
-    ];
-    const odds={...tables[step]};
-    if(stage>10){const extra=Math.min(7,(stage-10)*.35);odds.SSR+=extra;odds.S+=extra*.5;odds.C=Math.max(2,odds.C-extra);odds.B-=extra*.5}
-    const bonus=clamp(run.rarityBonus||0,0,10);
-    odds.SSR+=bonus*.25;odds.S+=bonus*.5;odds.A+=bonus*.25;odds.C=Math.max(0,odds.C-bonus);
-    const total=Object.values(odds).reduce((sum,value)=>sum+value,0);
-    odds.B+=100-total;
+    const stage=Math.max(1,run.stage||1),opening=isOpeningRecruit(run);
+    const base=opening?{C:44,B:28,A:26,S:2,SSR:.8}
+      :stage<=4?{C:43,B:29,A:24,S:4,SSR:.8}
+      :stage<=7?{C:27,B:27,A:40,S:6,SSR:.8}
+      :{C:15,B:21,A:54,S:10,SSR:.8};
+    const odds={...base},scouting=clamp(run.rarityBonus||0,0,5);
+    odds.S*=Math.pow(1.08,scouting);
+    odds.SSR*=Math.pow(1.04,scouting);
+    if(stage>10){
+      const depth=stage-10;
+      odds.A+=Math.min(14,depth);
+      odds.S+=Math.min(7,depth*.4);
+      odds.SSR=Math.min(2,odds.SSR+depth*.05);
+    }
+    const softPity=Math.min(6,Math.max(0,(run.noSPlusGroups||0)-5));
+    odds.S+=softPity;
+    odds.C=Math.max(2,odds.C-softPity);
+    const baseTotal=odds.C+odds.B+odds.A+odds.S;
+    for(const tier of ['C','B','A','S'])odds[tier]=odds[tier]*100/baseTotal;
     return odds;
   }
-  function tierRoll(run){
-    const odds=tierOdds(run),n=nextRandom(run)*100;
-    let cursor=odds.SSR;if(n<cursor)return 'SSR';
-    cursor+=odds.S;if(n<cursor)return 'S';
-    cursor+=odds.A;if(n<cursor)return 'A';
-    cursor+=odds.B;return n<cursor?'B':'C';
+  function tierRoll(run,minimum='C'){
+    const odds=tierOdds(run),eligible=['C','B','A','S'].filter(tier=>tierValue[tier]>=tierValue[minimum]);
+    const total=eligible.reduce((sum,tier)=>sum+odds[tier],0),n=nextRandom(run)*total;
+    let cursor=0;
+    for(const tier of eligible){cursor+=odds[tier];if(n<cursor)return tier}
+    return eligible[eligible.length-1];
+  }
+  function recruitPool(run,tier,chosen,opening){
+    const chosenIdentities=new Set(chosen.map(identityOf)),ownedIds=new Set(Object.keys(run.owned));
+    const usable=star=>!chosen.includes(star.id)&&!chosenIdentities.has(identityOf(star.id))
+      &&(!opening||!ownedIds.has(star.id))
+      &&(!run.owned[star.id]||run.owned[star.id].stars<star.maxStars);
+    let pool=STARS.filter(star=>star.tier===tier&&usable(star));
+    if(!pool.length)pool=STARS.filter(usable);
+    return pool;
   }
   function makeOffer(run){
     if(run.offer.length)return run.offer;
-    const chosen=[];
+    const chosen=[],opening=isOpeningRecruit(run),group=(run.recruitGroups||0)+1;
+    const requireS=(run.noSPlusGroups||0)>=11;
+    let requireA=(run.noAPlusGroups||0)>=3?1:0;
+    if(opening&&group===3&&(run.openingAPlusGroups||0)===0)requireA=Math.max(requireA,1);
+    if(opening&&group===6&&(run.openingAPlusGroups||0)<2)requireA=Math.max(requireA,2);
     for(let i=0;i<4;i++){
-      let tier=tierRoll(run);
-      if(i===3 && run.stage<=2 && !chosen.some(id=>tierValue[BY_ID[id].tier]>=1))tier='B';
-      let pool=STARS.filter(s=>s.tier===tier && !chosen.includes(s.id) && !run.owned[s.id]);
-      if(!pool.length)pool=STARS.filter(s=>!chosen.includes(s.id) && !run.owned[s.id]);
-      if(!pool.length)pool=STARS.filter(s=>!chosen.includes(s.id));
+      const remaining=4-i,currentA=chosen.filter(id=>tierValue[BY_ID[id].tier]>=tierValue.A).length;
+      const currentS=chosen.some(id=>tierValue[BY_ID[id].tier]>=tierValue.S);
+      let minimum=requireS&&!currentS&&remaining===1?'S':requireA-currentA>=remaining?'A':'C';
+      if(i===3&&minimum==='C'&&!chosen.some(id=>tierValue[BY_ID[id].tier]>=tierValue.B))minimum='B';
+      const tier=tierRoll(run,minimum),pool=recruitPool(run,tier,chosen,opening);
       chosen.push(randomChoice(run,pool).id);
     }
+    const odds=tierOdds(run);
+    if(nextRandom(run)<odds.SSR/100){
+      const ssrPool=recruitPool(run,'SSR',chosen,opening).filter(star=>star.tier==='SSR');
+      if(ssrPool.length)chosen[Math.floor(nextRandom(run)*chosen.length)]=randomChoice(run,ssrPool).id;
+    }
+    const hasA=chosen.some(id=>tierValue[BY_ID[id].tier]>=tierValue.A);
+    const hasS=chosen.some(id=>tierValue[BY_ID[id].tier]>=tierValue.S);
+    run.recruitGroups=group;
+    run.noAPlusGroups=hasA?0:(run.noAPlusGroups||0)+1;
+    run.noSPlusGroups=hasS?0:(run.noSPlusGroups||0)+1;
+    if(opening&&hasA)run.openingAPlusGroups=(run.openingAPlusGroups||0)+1;
     run.offer=chosen;
     return chosen;
   }
@@ -147,9 +179,9 @@
   }
   function resolvePending(run,mode,index){
     const id=run.pending;if(!id)return false;
-    if(mode==='sell'){run.cash+=saleValue(id)}
+    if(mode==='sell'){run.cash+=saleValue(id,1)}
     else if(mode==='replace' && Number.isInteger(index) && index>=0 && index<run.bench.length){
-      const old=run.bench[index];delete run.owned[old];run.cash+=Math.max(2,tierValue[BY_ID[old].tier]+1);
+      const old=run.bench[index];run.cash+=saleValue(old,run.owned[old]?.stars);delete run.owned[old];
       run.owned[id]={stars:1,train:0,trainedAt:0};run.bench[index]=id;
     } else return false;
     run.pending=null;return true;
@@ -182,11 +214,14 @@
   }
   function sellBench(run,index){
     if(run.ended||run.lastBattle||!Number.isInteger(index)||index<0||index>=run.bench.length)return 0;
-    const id=run.bench[index],value=saleValue(id);
+    const id=run.bench[index],value=saleValue(id,run.owned[id]?.stars);
     run.bench.splice(index,1);delete run.owned[id];run.cash+=value;
     return value;
   }
-  function playerScore(star,own,key){return star.attrs[key]+(own.stars-1)*3+own.train*3}
+  function playerScore(star,own,key){
+    const starGrowth=star.tier==='SSR'?.2:.1,trainingGrowth=star.tier==='SSR'?.04:.03;
+    return star.attrs[key]*(1+(own.stars-1)*starGrowth+own.train*trainingGrowth);
+  }
   function fused(run,strategy=''){
     const stats={},talents=[],talentEffects=[],bonds=activeSynergies(run),talentPercents=Object.fromEntries(ATTRS.map(attr=>[attr,0]));
     for(const attr of ATTRS){
@@ -227,8 +262,9 @@
     const strategy=star.best==='three'?'outside':star.best==='drive'?'drive':'collapse';
     return {id,name:star.name,strategy,stats,rating:Math.round(ATTRS.reduce((n,a)=>n+stats[a],0)/ATTRS.length)};
   }
-  function trainingCost(run,id){const level=run.owned[id]?.train??0;return [4,7,11,15,20][level]+(run.talent==='agent'?2:0)}
-  function train(run,id){const own=run.owned[id],star=BY_ID[id];if(!own||!star||own.train>=star.maxTrain||own.trainedAt===run.stage)return false;const cost=trainingCost(run,id);if(run.cash<cost)return false;run.cash-=cost;own.train++;own.trainedAt=run.stage;return true}
+  function trainingLimit(run,id){const star=BY_ID[id];return star?(run.endless||run.stage>10?10:star.maxTrain):0}
+  function trainingCost(run,id){const level=run.owned[id]?.train??0,base=TRAINING_COSTS[level];return base===undefined?Infinity:base+(run.talent==='agent'?2:0)}
+  function train(run,id){const own=run.owned[id],star=BY_ID[id];if(!own||!star||own.train>=trainingLimit(run,id)||own.trainedAt===run.stage)return false;const cost=trainingCost(run,id);if(run.cash<cost)return false;run.cash-=cost;own.train++;own.trainedAt=run.stage;return true}
   function buyBoost(run,id){const item=BOOSTS.find(b=>b.id===id);if(!item||run.cash<item.price||run.boosts.length>=3||run.boosts.includes(id))return false;run.cash-=item.price;run.boosts.push(id);return true}
   function buyGear(run,id){const item=GEAR.find(g=>g.id===id);if(!item||run.cash<item.price||run.gear.length>=5||run.gear.includes(id))return false;run.cash-=item.price;run.gear.push(id);return true}
   function expandBench(run){if(run.cash<10||run.benchLimit>=10)return false;run.cash-=10;run.benchLimit++;return true}
@@ -310,7 +346,7 @@
     run.refreshFree=1;run.offer=[];run.lastBattle=null;
     return true;
   }
-  const api={ATTRS,LABELS,SLOTS,STRATEGIES,TALENTS,STARS,BY_ID,FOES,SYNERGIES,BOOSTS,GEAR,createGame,createRun,tierOdds,makeOffer,recruit,recruitCost,resolvePending,swapBench,swapPositions,saleValue,sellBench,starterCount,ownedCount,identityOf,starSynergies,activeSynergies,fused,opponent,trainingCost,train,buyBoost,buyGear,expandBench,refreshOffer,battle,continueRun,finishRun,clamp};
+  const api={ATTRS,LABELS,SLOTS,STRATEGIES,TALENTS,STARS,BY_ID,FOES,SYNERGIES,BOOSTS,GEAR,createGame,createRun,tierOdds,makeOffer,recruit,recruitCost,resolvePending,swapBench,swapPositions,saleValue,sellBench,starterCount,ownedCount,identityOf,starSynergies,activeSynergies,playerScore,fused,opponent,trainingLimit,trainingCost,train,buyBoost,buyGear,expandBench,refreshOffer,battle,continueRun,finishRun,clamp};
   if(typeof module!=='undefined'&&module.exports)module.exports=api;
   root.SupFusionGameCore=api;
 })(typeof window!=='undefined'?window:globalThis);

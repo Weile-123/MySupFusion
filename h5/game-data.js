@@ -136,7 +136,7 @@
   const TIER_RULES={
     C:{min:45,max:81,main:78},
     B:{min:48,max:88,main:83},
-    A:{min:54,max:94,main:89},
+    A:{min:54,max:89,main:89},
     S:{min:60,max:99,main:95,talent:4},
     SSR:{min:85,max:128,main:120}
   };

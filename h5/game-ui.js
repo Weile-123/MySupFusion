@@ -34,7 +34,7 @@
       bestEndless:safeNumber(profile.bestEndless,0,100000,0),
       legend:safeNumber(profile.legend,0,10000000,0),
       discovered:Array.isArray(profile.discovered)?[...new Set(profile.discovered.filter(knownPlayer))]:[],
-      upgrades:{scouting:safeNumber(profile.upgrades?.scouting,0,10,0)}
+      upgrades:{scouting:safeNumber(profile.upgrades?.scouting,0,5,0)}
     };
     const source=raw.run;
     if(!source||typeof source!=='object'||!C.TALENTS.some(t=>t.id===source.talent))return restored;
@@ -43,7 +43,11 @@
     run.rng=safeNumber(source.rng,0,4294967295,run.rng);
     run.stage=safeNumber(source.stage,1,100000,1);
     run.endless=source.endless===true;
-    run.rarityBonus=safeNumber(source.rarityBonus,0,10,run.rarityBonus);
+    run.rarityBonus=safeNumber(source.rarityBonus,0,5,run.rarityBonus);
+    run.recruitGroups=safeNumber(source.recruitGroups,0,100000,run.recruitGroups);
+    run.noAPlusGroups=safeNumber(source.noAPlusGroups,0,3,run.noAPlusGroups);
+    run.noSPlusGroups=safeNumber(source.noSPlusGroups,0,11,run.noSPlusGroups);
+    run.openingAPlusGroups=safeNumber(source.openingAPlusGroups,0,6,run.openingAPlusGroups);
     run.morale=safeNumber(source.morale,0,3,3);
     run.cash=safeNumber(source.cash,0,1000000,16);
     run.free=safeNumber(source.free,0,1000,0);
@@ -58,7 +62,7 @@
         const star=C.BY_ID[id];
         run.owned[id]={
           stars:safeNumber(own.stars,1,star.maxStars,1),
-          train:safeNumber(own.train,0,star.maxTrain,0),
+          train:safeNumber(own.train,0,10,0),
           trainedAt:safeNumber(own.trainedAt,0,run.stage,0)
         };
       }
@@ -129,7 +133,7 @@
     document.querySelector('.app').classList.toggle('profile-mode',id==='profile');
     render();
     top();
-    window.scrollTo({top:0,behavior:'auto'});
+    els[id]?.scrollTo({top:0,behavior:'auto'});
   }
   function render(){({home:renderHome,talent:renderTalent,recruit:renderRecruit,roster:renderRoster,shop:renderShop,duel:renderDuel,result:renderResult,profile:renderProfile}[screen]||renderHome)();renderPending()}
   function runOrHome(){if(!game.run||game.run.ended){go('home');return null}return game.run}
@@ -182,7 +186,7 @@
     els.recruit.innerHTML=`
       <button class="inline-back" data-act="roster">← 返回融合球场</button>
       <div class="draft-heading"><div><span class="league-label">HOOP LEGEND</span><h1>DRAFT <small>招募</small></h1></div></div>
-      <div class="draft-odds"><span class="tier-dot legend-dot"></span>SSR ${pct(odds.SSR)}% <span class="tier-dot s-dot"></span>S ${pct(odds.S)}% <span class="tier-dot a-dot"></span>A ${pct(odds.A)}% <span class="tier-dot b-dot"></span>B ${pct(odds.B)}% <span class="tier-dot c-dot"></span>C ${pct(odds.C)}%<b>当前 ${r.cash} 奖金</b></div>
+      <div class="draft-odds"><span class="tier-dot legend-dot"></span>SSR 每组 ${pct(odds.SSR)}% <span class="tier-dot s-dot"></span>S ${pct(odds.S)}% <span class="tier-dot a-dot"></span>A ${pct(odds.A)}% <span class="tier-dot b-dot"></span>B ${pct(odds.B)}% <span class="tier-dot c-dot"></span>C ${pct(odds.C)}%<b>当前 ${r.cash} 奖金</b></div>
       <div class="choicegrid">${r.offer.map(draftCard).join('')}</div>
       <div class="floatingaction"><button class="btn wide" data-act="pick" ${r.free<=0&&r.cash<C.recruitCost(r)?'disabled':''}>${r.free<=0&&r.cash<C.recruitCost(r)?'奖金不足，无法招募':'确定选入 '+(selected?selected.name:'')+' →'}</button></div>`;
   }
@@ -203,7 +207,7 @@
     const s=C.BY_ID[id];
     return `<div class="bench-card ${tierClass[s.tier]} ${selectedPlace?.kind==='bench'&&selectedPlace.key===index?'selected':''}">
       <button class="bench-player" data-act="place" data-kind="bench" data-key="${index}"><strong>${s.name}</strong><small>${r.owned[id].stars} <span class="star-icon">★</span> · ${C.LABELS[s.best]} ${s.attrs[s.best]}</small></button>
-      <button class="bench-sell" data-act="sell-bench" data-index="${index}" aria-label="出售 ${s.name}"><span>出售</span><b><img src="assets/cash-stack.png" alt="">${C.saleValue(id)}</b></button>
+      <button class="bench-sell" data-act="sell-bench" data-index="${index}" aria-label="出售 ${s.name}"><span>出售</span><b><img src="assets/cash-stack.png" alt="">${C.saleValue(id,r.owned[id].stars)}</b></button>
     </div>`;
   }
   function renderRoster(){
@@ -230,8 +234,8 @@
     const tabs=[['training','训练'],['boost','赛前强化'],['gear','装备'],['capacity','容量']];
     let content='';
     if(shopTab==='training')content=Object.keys(r.owned).map(id=>{
-      const s=C.BY_ID[id],own=r.owned[id],disabled=own.train>=s.maxTrain||own.trainedAt===r.stage||r.cash<C.trainingCost(r,id);
-      return shopItem(s.name+' · 训练 '+own.train+'/'+s.maxTrain,C.LABELS[s.best]+'位贡献 +3 · 每关限练 1 次',own.train>=s.maxTrain?'已满级':cashPrice(C.trainingCost(r,id)),'train',id,disabled);
+      const s=C.BY_ID[id],own=r.owned[id],limit=C.trainingLimit(r,id),growth=s.tier==='SSR'?4:3,disabled=own.train>=limit||own.trainedAt===r.stage||r.cash<C.trainingCost(r,id);
+      return shopItem(s.name+' · 训练 '+own.train+'/'+limit,`基础属性 +${growth}% · 每关限练 1 次`,own.train>=limit?'已满级':cashPrice(C.trainingCost(r,id)),'train',id,disabled);
     }).join('');
     if(shopTab==='boost')content=C.BOOSTS.map(x=>shopItem(x.name,x.description,r.boosts.includes(x.id)?'已持有':cashPrice(x.price),'buy-boost',x.id,r.cash<x.price||r.boosts.length>=3||r.boosts.includes(x.id))).join('');
     if(shopTab==='gear')content=C.GEAR.map(x=>shopItem(x.name,x.description,r.gear.includes(x.id)?'已装备':cashPrice(x.price),'buy-gear',x.id,r.cash<x.price||r.gear.length>=5||r.gear.includes(x.id))).join('');

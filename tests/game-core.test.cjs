@@ -1,5 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
 const C = require('../h5/game-core.js');
 
 function draftedRun(seed = 42) {
@@ -47,7 +49,7 @@ test('all cards use six attributes and obey their tier ceilings', () => {
   assert.equal(C.LABELS.inside, '篮下');
   assert.equal(C.LABELS.post, undefined);
   assert.equal(C.LABELS.rebound, undefined);
-  const ceilings = { C: 81, B: 88, A: 94, S: 99, SSR: 128 };
+  const ceilings = { C: 81, B: 88, A: 89, S: 99, SSR: 128 };
   const mainFloors = { C: 78, B: 83, A: 89, S: 95, SSR: 120 };
   for (const star of C.STARS) {
     assert.deepEqual(Object.keys(star.attrs), C.ATTRS);
@@ -79,7 +81,7 @@ test('all cards use six attributes and obey their tier ceilings', () => {
   assert.equal(C.BY_ID.benwallace.tier, 'B');
   assert.equal(C.BY_ID.benwallace.best, 'def');
   assert.equal(C.BY_ID.benwallace.attrs.def, 88);
-  for (const [tier, expected] of [['C', [78, 81]], ['B', [83, 88]], ['A', [89, 94]], ['S', [95, 99]], ['SSR', [120, 128]]]) {
+  for (const [tier, expected] of [['C', [78, 81]], ['B', [83, 88]], ['A', [89, 89]], ['S', [95, 99]], ['SSR', [120, 128]]]) {
     const scores = C.STARS.filter(star => star.tier === tier).map(star => star.attrs[star.best]);
     assert.deepEqual([Math.min(...scores), Math.max(...scores)], expected);
   }
@@ -257,19 +259,61 @@ test('the six mandatory opening drafts exclude recruited players', () => {
   assert.equal(C.starterCount(run), 6);
 });
 
-test('draft rarity rises with stage and supports a future scouting upgrade', () => {
+test('draft rarity matches the reference stage tables and keeps SSR group-based', () => {
   const run = C.createRun('outside', 11);
   const early = C.tierOdds(run);
-  assert.deepEqual(early, { C: 45, B: 40, A: 14.5, S: 0.5, SSR: 0 });
-  run.stage = 9;
-  const late = C.tierOdds(run);
-  assert.equal(late.SSR, 5);
-  assert.equal(late.S, 21);
-  assert.ok(late.SSR > early.SSR && late.S > early.S);
-  run.rarityBonus = 4;
+  assert.deepEqual(early, { C: 44, B: 28, A: 26, S: 2, SSR: 0.8 });
+  run.offer = [];
+  run.recruitGroups = 6;
+  assert.deepEqual(C.tierOdds(run), { C: 43, B: 29, A: 24, S: 4, SSR: 0.8 });
+  run.stage = 5;
+  assert.deepEqual(C.tierOdds(run), { C: 27, B: 27, A: 40, S: 6, SSR: 0.8 });
+  run.stage = 8;
+  assert.deepEqual(C.tierOdds(run), { C: 15, B: 21, A: 54, S: 10, SSR: 0.8 });
+  run.rarityBonus = 5;
   const upgraded = C.tierOdds(run);
-  assert.ok(upgraded.SSR > late.SSR && upgraded.S > late.S);
-  assert.equal(Object.values(upgraded).reduce((sum, value) => sum + value, 0), 100);
+  assert.ok(upgraded.S > 10);
+  assert.ok(upgraded.SSR > 0.8);
+  assert.ok(Math.abs(['C', 'B', 'A', 'S'].reduce((sum, tier) => sum + upgraded[tier], 0) - 100) < 1e-9);
+});
+
+test('SSR is rolled once per four-player group and never appears twice', () => {
+  const run = C.createRun('outside', 20260922);
+  run.offer = [];
+  run.recruitGroups = 6;
+  let ssrGroups = 0;
+  for (let group = 0; group < 20000; group++) {
+    run.offer = [];
+    const offer = C.makeOffer(run);
+    const ssrCount = offer.filter(id => C.BY_ID[id].tier === 'SSR').length;
+    assert.ok(ssrCount <= 1);
+    if (ssrCount) ssrGroups++;
+  }
+  const observed = ssrGroups / 20000;
+  assert.ok(observed > 0.006 && observed < 0.01, observed);
+});
+
+test('draft pity guarantees A and S tiers at the documented thresholds', () => {
+  const aRun = C.createRun('outside', 99);
+  aRun.offer = [];
+  aRun.recruitGroups = 6;
+  aRun.noAPlusGroups = 3;
+  assert.ok(C.makeOffer(aRun).some(id => ['A', 'S', 'SSR'].includes(C.BY_ID[id].tier)));
+
+  const sRun = C.createRun('outside', 101);
+  sRun.offer = [];
+  sRun.recruitGroups = 6;
+  sRun.noSPlusGroups = 11;
+  assert.ok(C.makeOffer(sRun).some(id => ['S', 'SSR'].includes(C.BY_ID[id].tier)));
+});
+
+test('mobile shell locks outer scrolling and resets the active inner screen', () => {
+  const html = fs.readFileSync(path.join(__dirname, '../h5/index.html'), 'utf8');
+  const ui = fs.readFileSync(path.join(__dirname, '../h5/game-ui.js'), 'utf8');
+  assert.match(html, /html,body\{[^}]*overflow:hidden;[^}]*overscroll-behavior:none/);
+  assert.match(html, /\.screen\{[^}]*overflow-y:auto;[^}]*overscroll-behavior-y:contain/);
+  assert.match(ui, /els\[id\]\?\.scrollTo\(\{top:0,behavior:'auto'\}\)/);
+  assert.doesNotMatch(ui, /window\.scrollTo/);
 });
 
 test('one free recruit is reset each stage and cannot be banked', () => {
@@ -313,7 +357,7 @@ test('percentage talents scale after star and training growth and only activate 
   effect.stats.three = 0;
   const withoutTalent = C.fused(run).stats.three;
   effect.stats.three = original;
-  assert.equal(C.fused(run).stats.three, Math.round(withoutTalent * 1.14));
+  assert.equal(C.fused(run).stats.three, Math.min(150, Math.round(withoutTalent * 1.14)));
   C.swapPositions(run, { kind: 'slot', key: 'three' }, { kind: 'slot', key: 'mid' });
   assert.ok(!C.fused(run).talents.some(star => star.id === 'curry'));
 });
@@ -415,18 +459,50 @@ test('players can exchange any occupied lineup and bench positions', () => {
   assert.equal(run.bench[0], second);
 });
 
-test('selling a bench player removes the card and pays its tier value', () => {
+test('selling a bench player pays reference tier base value times current stars', () => {
   const run = draftedRun();
   const spare = C.STARS.find(s => !run.owned[s.id]);
-  run.owned[spare.id] = { stars: 1, train: 0, trainedAt: 0 };
+  run.owned[spare.id] = { stars: 3, train: 0, trainedAt: 0 };
   run.bench.push(spare.id);
   const cash = run.cash;
-  const value = C.saleValue(spare.id);
-  assert.ok(value >= 3);
+  const bases = { C: 2, B: 3, A: 5, S: 8, SSR: 16 };
+  const value = C.saleValue(spare.id, 3);
+  assert.equal(value, bases[spare.tier] * 3);
   assert.equal(C.sellBench(run, 0), value);
   assert.equal(run.cash, cash + value);
   assert.equal(run.bench.length, 0);
   assert.equal(run.owned[spare.id], undefined);
+});
+
+test('star and training growth use reference percentages and distinguish SSR', () => {
+  const normal = C.STARS.find(star => star.tier === 'A');
+  const legend = C.STARS.find(star => star.tier === 'SSR');
+  assert.equal(C.playerScore(normal, { stars: 3, train: 2 }, normal.best), normal.attrs[normal.best] * 1.26);
+  assert.equal(C.playerScore(legend, { stars: 3, train: 2 }, legend.best), legend.attrs[legend.best] * 1.48);
+});
+
+test('training keeps mainline caps but uses the full reference cost ladder in endless', () => {
+  const run = C.createRun('outside', 23);
+  const normal = C.STARS.find(star => star.tier === 'A');
+  const legend = C.STARS.find(star => star.tier === 'SSR');
+  run.owned = {
+    [normal.id]: { stars: 1, train: 2, trainedAt: 0 },
+    [legend.id]: { stars: 1, train: 3, trainedAt: 0 }
+  };
+  run.cash = 999;
+  assert.equal(C.trainingLimit(run, normal.id), 3);
+  assert.equal(C.trainingLimit(run, legend.id), 5);
+  assert.equal(C.trainingCost(run, normal.id), 11);
+  assert.equal(C.trainingCost(run, legend.id), 16);
+  run.endless = true;
+  run.stage = 11;
+  assert.equal(C.trainingLimit(run, normal.id), 10);
+  assert.equal(C.trainingLimit(run, legend.id), 10);
+  const expected = [4, 7, 11, 16, 22, 29, 37, 46, 56, 67];
+  expected.forEach((cost, level) => {
+    run.owned[normal.id].train = level;
+    assert.equal(C.trainingCost(run, normal.id), cost);
+  });
 });
 
 test('full bench requires explicit sale or replacement', () => {

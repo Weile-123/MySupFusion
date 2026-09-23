@@ -169,8 +169,43 @@
     .player-detail.tier-legend .detail-bonds>div{border-color:#92dfea88;background:linear-gradient(135deg,#29454e,#32354d)}
     .player-detail.tier-legend .detail-bonds>div.active{border-color:#53e59a;background:linear-gradient(135deg,#1d4b3b,#263f4d);box-shadow:0 0 12px #4ce29444}
     #roster .bond-heading{margin-top:2px}
-    </style>
-</head>
+        /* 详情页固定头与成长属性展示。 */
+    .draft-prob-note{margin:-5px 0 10px;padding:6px 8px;border:1px solid #474039;border-radius:6px;background:#202123;color:#aaa49a;font-size:8px;line-height:1.45}.slot-gain{color:#70df98;font-size:7px;font-style:normal}.player-detail{height:min(85vh,720px);max-height:85vh;padding:0;display:flex;flex-direction:column;overflow:hidden}.player-detail .detail-head{position:relative;z-index:2;flex:0 0 auto;margin:0;padding:15px 16px;border-bottom:1px solid #45413b}.player-detail .detail-scroll{min-height:0;overflow-y:auto;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch;padding:14px 16px 18px}.detail-growth{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:10px;padding:8px 9px;border:1px solid #49443c;border-radius:7px;background:#292826}.detail-growth b{color:#f5e7cb;font-size:10px}.detail-growth span{color:#70df98;font-size:9px;font-weight:900;text-align:right}.detail-stats small{display:block;margin-top:2px;color:#77736d;font-size:7px}.detail-sell{width:100%;margin-top:13px;padding:12px;border:1px solid #b64e4e;border-radius:8px;background:#72292c;color:#ffd6d6;font-size:11px;font-weight:950;box-shadow:inset 0 0 16px #e84d4d20}.detail-sell:active{background:#8b3034}</style>
+
+  <style>
+    .shop-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;align-items:stretch}
+    .shop-grid .emptyline{grid-column:1/-1}
+    .shopitem{min-width:0;min-height:156px;padding:11px;display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:8px;border-radius:10px;background:#252525}
+    .shopitem .shop-card-top{display:flex;align-items:center;justify-content:space-between;gap:5px;color:#96928b;font-size:9px;font-weight:800}
+    .shopitem .shop-rarity{display:inline-grid;place-items:center;min-width:25px;height:18px;padding:0 5px;border:1px solid currentColor;border-radius:4px;font-size:10px;font-weight:950}
+    .shopitem .shop-card-copy{min-height:62px;flex:1}
+    .shopitem strong{display:block;color:#f7eedf;font-size:13px;line-height:1.25}
+    .shopitem small{display:block;margin-top:6px;color:#aaa69f;font-size:9px;line-height:1.5}
+    .shopitem .btn{width:100%;min-width:0;min-height:34px;padding:5px 7px;font-size:10px;box-shadow:none}
+    .shop-tier-c{border-color:#767676;box-shadow:inset 0 0 20px #b8b8b80b}
+    .shop-tier-c .shop-rarity{color:#c8c8c8}
+    .shop-tier-b{border-color:#355c8d;box-shadow:inset 0 0 20px #367bc519}
+    .shop-tier-b .shop-rarity{color:#6ca8e9}
+    .shop-tier-a{border-color:#654e8b;box-shadow:inset 0 0 20px #875fc51c}
+    .shop-tier-a .shop-rarity{color:#ae83dc}
+    .shop-tier-s,.shop-tier-ssr{border-color:#856322;box-shadow:inset 0 0 22px #d19a261b}
+    .shop-tier-s .shop-rarity,.shop-tier-ssr .shop-rarity{color:#e0b54d}
+    .shop-refresh{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 10px;padding:8px 10px;border:1px solid #45413a;border-radius:8px;background:#222321;color:#aaa49a;font-size:9px}
+    .shop-refresh button{border:1px solid #755427;border-radius:6px;background:#2e281f;color:#ffd06e;padding:7px 9px;font-size:9px;font-weight:900}
+    .shop-refresh button:disabled{opacity:.42}
+    .equipped-shelf{margin:0 0 10px;padding:10px;border:1px solid #4d463a;border-radius:9px;background:#20211f}
+    .shop-subhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;color:#d9d0c0;font-size:9px}
+    .shop-subhead b{color:#ffd06d;font-size:10px}
+    .equipped-shelf>div:last-child{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+    .equipped-shelf button{min-width:0;border:1px solid #48443d;border-radius:6px;background:#292a28;color:#ddd4c5;padding:7px;text-align:left}
+    .equipped-shelf button span{display:block;color:#9c978e;font-size:8px}
+    .equipped-shelf button b{display:block;margin:3px 0;color:#f7ead5;font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .equipped-shelf button em{color:#d99e50;font-size:8px;font-style:normal}
+    @media(max-width:360px){.shopitem{min-height:150px;padding:9px}.shopitem strong{font-size:12px}.shopitem small{font-size:8px}.shop-grid{gap:6px}}
+  </style>
+<style>
+.shop-tier-sr{border-color:transparent;background:linear-gradient(#242526,#242526) padding-box,linear-gradient(110deg,#a24b65,#a47b26,#31866a,#3c79a8,#80549d) border-box;box-shadow:inset 0 0 24px #7edff018}.shop-tier-sr .shop-rarity{border-color:transparent;background:linear-gradient(100deg,#c7506d,#c99631,#49a782,#4d94ca,#9d64bd);color:#fff;box-shadow:0 0 10px #64d8e144}.equipped-shelf>div:last-child{align-items:stretch}.equipped-item{min-width:0;border:1px solid #48443d;border-radius:7px;background:#292a28;padding:8px;display:flex;flex-direction:column;gap:4px}.equipped-item>span{color:#a8a197;font-size:8px}.equipped-item>b{color:#f7ead5;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.equipped-item>small{min-height:25px;color:#c0b6a6;font-size:8px;line-height:1.5}.equipped-item>button{border:1px solid #715629;border-radius:5px;background:#3a3020;color:#ffd071;padding:6px;font-size:8px;font-weight:950;text-align:center}.equipped-item>button.gear-sell{border-color:#703b3b;background:#3a2525;color:#ef9b92}.gear-bind-modal{max-height:82vh;overflow:hidden;display:flex;flex-direction:column}.gear-bind-modal .modal-head span{color:#ffb42b;font-size:9px;font-weight:950}.gear-bind-modal .modal-head h2{margin:4px 0;color:#fff0d2}.gear-bind-modal>p{margin:10px 0;color:#bdb5a8;font-size:10px}.gear-bind-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;overflow-y:auto}.gear-bind-list button{border:1px solid #48443d;border-radius:7px;background:#292a28;color:#eee2ce;padding:9px;text-align:left}.gear-bind-list button.selected{border-color:#d49327;background:#3d301e;box-shadow:inset 0 0 15px #dd941d22}.gear-bind-list b,.gear-bind-list span{display:block}.gear-bind-list b{font-size:10px}.gear-bind-list span{margin-top:4px;color:#aaa195;font-size:7px}
+</style></head>
 <body>
 <div class="app home-mode">
   <header class="top"><button class="top-back" data-screen="home">← 返回首页</button></header>

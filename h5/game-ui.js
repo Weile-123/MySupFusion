@@ -4,7 +4,7 @@
   const C=window.SupFusionGameCore;
   const STORAGE=window.FusionStorage;
   const els=Object.fromEntries(['home','talent','recruit','roster','shop','duel','result','profile'].map(id=>[id,document.getElementById(id)]));
-  let game=C.createGame(),screen='home',talentOffer=[],selectedTalent='',selectedOffer='',selectedPlace=null,showBonds=false,detailStar='',strategy='collapse',shopTab='training',profileTab='stars',saveQueue=Promise.resolve();
+  let game=C.createGame(),screen='home',talentOffer=[],selectedTalent='',selectedOffer='',selectedPlace=null,showBonds=false,detailStar='',detailContext=null,gearBindId='',strategy='collapse',shopTab='training',profileTab='stars',saveQueue=Promise.resolve();
   const tierName={SSR:'SSR',S:'S',A:'A',B:'B',C:'C'};
   const tierClass={SSR:'tier-legend',S:'tier-s',A:'tier-a',B:'tier-b',C:'tier-c'};
   const attrOrder=['three','mid','drive','handle','inside','def'];
@@ -18,6 +18,9 @@
   }
   function safeNumber(value,min,max,fallback){
     return typeof value==='number'&&Number.isFinite(value)?C.clamp(Math.round(value),min,max):fallback;
+  }
+  function safeProbability(value,fallback){
+    return typeof value==='number'&&Number.isFinite(value)?C.clamp(value,0,100):fallback;
   }
   function knownPlayer(id){return typeof id==='string'&&Object.hasOwn(C.BY_ID,id)}
   function escapeText(value){
@@ -82,9 +85,28 @@
     }
     for(const id of Object.keys(run.owned))if(!used.has(id))delete run.owned[id];
     run.offer=Array.isArray(source.offer)?[...new Set(source.offer.filter(knownPlayer))].slice(0,4):[];
+    const currentOdds=C.recruitProbabilitySummary(run),savedOdds=source.offerOdds;
+    run.offerOdds=run.offer.length&&savedOdds&&typeof savedOdds==='object'?{
+      C:safeProbability(savedOdds.C,currentOdds.C),B:safeProbability(savedOdds.B,currentOdds.B),A:safeProbability(savedOdds.A,currentOdds.A),S:safeProbability(savedOdds.S,currentOdds.S),SSR:safeProbability(savedOdds.SSR,currentOdds.SSR),
+      sGroup:safeProbability(savedOdds.sGroup,currentOdds.sGroup),ssrGroup:safeProbability(savedOdds.ssrGroup,currentOdds.ssrGroup),
+      aPityIn:safeNumber(savedOdds.aPityIn,0,4,currentOdds.aPityIn),sPityIn:safeNumber(savedOdds.sPityIn,0,12,currentOdds.sPityIn)
+    }:run.offer.length?currentOdds:null;
     run.pending=knownPlayer(source.pending)&&!run.owned[source.pending]?source.pending:null;
-    run.boosts=Array.isArray(source.boosts)?[...new Set(source.boosts.filter(id=>C.BOOSTS.some(b=>b.id===id)))].slice(0,3):[];
+    run.boosts=Array.isArray(source.boosts)?source.boosts.filter(id=>C.BOOSTS.some(b=>b.id===id)).slice(0,200):[];
     run.gear=Array.isArray(source.gear)?[...new Set(source.gear.filter(id=>C.GEAR.some(g=>g.id===id)))].slice(0,5):[];
+    run.gearBindings={};
+    for(const gearId of run.gear){
+      const item=C.GEAR.find(gear=>gear.id===gearId);if(item?.kind!=='signature')continue;
+      const saved=source.gearBindings?.[gearId],fallback=Object.keys(run.owned).find(id=>C.identityOf(id)===item.exclusivePlayer)||Object.keys(run.owned)[0];
+      if(knownPlayer(saved)&&run.owned[saved])run.gearBindings[gearId]=saved;else if(fallback)run.gearBindings[gearId]=fallback;
+    }
+    run.shopRefreshes=safeNumber(source.shopRefreshes,0,100,0);
+    run.gearRefreshes=safeNumber(source.gearRefreshes,0,100,0);
+    run.shopOffers={
+      boost:Array.isArray(source.shopOffers?.boost)?[...new Set(source.shopOffers.boost.filter(id=>C.BOOSTS.some(item=>item.id===id)))].slice(0,4):[],
+      gear:Array.isArray(source.shopOffers?.gear)?[...new Set(source.shopOffers.gear.filter(id=>C.GEAR.some(item=>item.id===id)))].slice(0,3):[]
+    };
+    C.ensureShop(run);
     run.ended=source.ended===true||run.morale===0;
     run.awarded=source.awarded===true;
     const report=source.lastBattle;
@@ -105,8 +127,8 @@
         foeName:foe.name,
         foeStrategy:C.opponent(run).strategy,
         beats:safeNumber(report.beats,-1,1,0),
-        rating:safeNumber(report.rating,0,150,0),
-        foeRating:safeNumber(report.foeRating,0,150,0),
+        rating:safeNumber(report.rating,0,Number.MAX_SAFE_INTEGER,0),
+        foeRating:safeNumber(report.foeRating,0,Number.MAX_SAFE_INTEGER,0),
         legendEarned:safeNumber(report.legendEarned,0,100000,0)
       };
     }
@@ -126,7 +148,7 @@
   }
   function go(id){
     if(id!=='roster'){showBonds=false;selectedPlace=null}
-    if(id!=='recruit')detailStar='';
+    if(id!=='recruit'){detailStar='';detailContext=null}
     screen=id;
     Object.keys(els).forEach(key=>els[key].classList.toggle('active',key===id));
     document.querySelector('.app').classList.toggle('home-mode',id==='home');
@@ -182,11 +204,12 @@
     const r=runOrHome();if(!r)return;
     if(!r.offer.length&&!r.pending){C.makeOffer(r);save()}
     if(!r.offer.includes(selectedOffer))selectedOffer=r.offer[0]||'';
-    const selected=C.BY_ID[selectedOffer],odds=C.tierOdds(r),pct=value=>Number.isInteger(value)?value:String(value.toFixed(1)).replace(/\.0$/,'');
+    const selected=C.BY_ID[selectedOffer],odds=r.offerOdds||C.recruitProbabilitySummary(r),pct=value=>Number.isInteger(value)?value:String(value.toFixed(1)).replace(/\.0$/,'');
     els.recruit.innerHTML=`
       <button class="inline-back" data-act="roster">← 返回融合球场</button>
       <div class="draft-heading"><div><span class="league-label">HOOP LEGEND</span><h1>DRAFT <small>招募</small></h1></div></div>
-      <div class="draft-odds"><span class="tier-dot legend-dot"></span>SSR 每组 ${pct(odds.SSR)}% <span class="tier-dot s-dot"></span>S ${pct(odds.S)}% <span class="tier-dot a-dot"></span>A ${pct(odds.A)}% <span class="tier-dot b-dot"></span>B ${pct(odds.B)}% <span class="tier-dot c-dot"></span>C ${pct(odds.C)}%<b>当前 ${r.cash} 奖金</b></div>
+      <div class="draft-odds"><span>单卡基础</span><span class="tier-dot s-dot"></span>S ${pct(odds.S)}% <span class="tier-dot a-dot"></span>A ${pct(odds.A)}% <span class="tier-dot b-dot"></span>B ${pct(odds.B)}% <span class="tier-dot c-dot"></span>C ${pct(odds.C)}%<b>当前 ${r.cash} 奖金</b></div>
+      <div class="draft-prob-note">四选一出现 S 约 ${pct(odds.sGroup)}%（未计保底） · SSR 独立替换每组 ${pct(odds.ssrGroup)}% · A保底≤${odds.aPityIn}组 · S保底≤${odds.sPityIn}组</div>
       <div class="choicegrid">${r.offer.map(draftCard).join('')}</div>
       <div class="floatingaction"><button class="btn wide" data-act="pick" ${r.free<=0&&r.cash<C.recruitCost(r)?'disabled':''}>${r.free<=0&&r.cash<C.recruitCost(r)?'奖金不足，无法招募':'确定选入 '+(selected?selected.name:'')+' →'}</button></div>`;
   }
@@ -194,8 +217,9 @@
     const id=r.slots[slot.id],s=C.BY_ID[id];
     const selected=selectedPlace?.kind==='slot'&&selectedPlace.key===slot.id?'selected':'';
     if(!s)return `<button class="slot empty ${selected}" data-act="place" data-kind="slot" data-key="${slot.id}"><span class="slot-top">${slot.label}位</span><span class="slot-body"><strong>待招募<small>选择球员换入</small></strong></span></button>`;
+    const effective=C.playerEffectiveStats(r,id,slot.id),value=effective.stats[slot.id],gain=value-s.attrs[slot.id];
     return `<button class="slot ${tierClass[s.tier]} ${selected}" data-act="place" data-kind="slot" data-key="${slot.id}"><span class="slot-tier-watermark">${tierName[s.tier]}</span><span class="slot-top">${slot.label}位</span>
-      <span class="slot-body"><strong>${s.name}<small><b class="slot-value">${s.attrs[slot.id]}</b> · ${s.talent} · <b class="slot-rank">${r.owned[id].stars}<span class="star-icon">★</span></b></small></strong></span></button>`;
+      <span class="slot-body"><strong>${s.name}<small><b class="slot-value">${value}</b>${gain?` <em class="slot-gain">${gain>0?'+':''}${gain}</em>`:''} · 训练${effective.train} · <b class="slot-rank">${effective.stars}<span class="star-icon">★</span></b></small></strong></span></button>`;
   }
   function acePanel(r,fusion){
     return `<div class="ace-panel panel"><div class="ace-mark"><img src="assets/fusion-ace.png" alt="融合球员概念插画"><span>LV.${r.stage} 融合体</span></div>
@@ -204,10 +228,9 @@
         <div class="ace-bars">${attrOrder.map(a=>`<div><span>${C.LABELS[a]}</span><i><em class="${barColor[a]}" style="width:${Math.min(100,fusion.stats[a])}%"></em></i><b>${fusion.stats[a]}</b></div>`).join('')}</div></div></div>`;
   }
   function benchCard(id,index,r){
-    const s=C.BY_ID[id];
+    const s=C.BY_ID[id],effective=C.playerEffectiveStats(r,id),value=effective.stats[s.best];
     return `<div class="bench-card ${tierClass[s.tier]} ${selectedPlace?.kind==='bench'&&selectedPlace.key===index?'selected':''}">
-      <button class="bench-player" data-act="place" data-kind="bench" data-key="${index}"><strong>${s.name}</strong><small>${r.owned[id].stars} <span class="star-icon">★</span> · ${C.LABELS[s.best]} ${s.attrs[s.best]}</small></button>
-      <button class="bench-sell" data-act="sell-bench" data-index="${index}" aria-label="出售 ${s.name}"><span>出售</span><b><img src="assets/cash-stack.png" alt="">${C.saleValue(id,r.owned[id].stars)}</b></button>
+      <button class="bench-player" data-act="place" data-kind="bench" data-key="${index}"><strong>${s.name}</strong><small>${effective.stars} <span class="star-icon">★</span> · 训练${effective.train} · ${C.LABELS[s.best]} ${value}</small></button>
     </div>`;
   }
   function renderRoster(){
@@ -225,26 +248,39 @@
         <div class="quick-actions"><button class="btn wide recruit-action ${r.free>0?'has-free':''}" data-act="recruit" ${r.free<=0&&r.cash<C.recruitCost(r)?'disabled':''}><span>招募球员</span><small>${r.free>0?`免费 · 仅本轮（${r.free} 次）`:`${C.recruitCost(r)} 奖金`}</small>${r.free>0?'<i aria-label="有免费招募"></i>':''}</button><button class="btn wide" data-act="shop">训练 / 商店</button></div>
         <button class="btn wide roster-fight" data-act="duel" ${C.starterCount(r)<6?'disabled':''}>前往备战</button></div>`;
   }
-  function shopItem(title,desc,price,action,id,disabled){
-    return `<div class="panel shopitem"><div class="left"><span class="shopicon">◆</span><div><strong>${title}</strong><small>${desc}</small></div></div><button class="btn small" data-act="${action}" data-id="${id}" ${disabled?'disabled':''}>${price}</button></div>`;
+  function shopItem(title,desc,price,action,id,disabled,rarity='C',meta=''){
+    return `<div class="panel shopitem shop-tier-${rarity.toLowerCase()}"><div class="shop-card-top"><span class="shop-rarity">${rarity}</span><span>${meta}</span></div><div class="shop-card-copy"><strong>${title}</strong><small>${desc}</small></div><button class="btn small" data-act="${action}" data-id="${id}" ${disabled?'disabled':''}>${price}</button></div>`;
   }
   function cashPrice(value){return `<span class="cash-price"><img src="assets/cash-stack.png" alt="奖金">${value}</span>`}
   function renderShop(){
     const r=runOrHome();if(!r)return;
-    const tabs=[['training','训练'],['boost','赛前强化'],['gear','装备'],['capacity','容量']];
-    let content='';
+    const tabs=[['training','训练'],['boost','赛前强化'],['gear','装备'],['capacity','容量']],offers=C.ensureShop(r);
+    let content='',shopTools='',equipped='';
     if(shopTab==='training')content=Object.keys(r.owned).map(id=>{
-      const s=C.BY_ID[id],own=r.owned[id],limit=C.trainingLimit(r,id),growth=s.tier==='SSR'?4:3,disabled=own.train>=limit||own.trainedAt===r.stage||r.cash<C.trainingCost(r,id);
-      return shopItem(s.name+' · 训练 '+own.train+'/'+limit,`基础属性 +${growth}% · 每关限练 1 次`,own.train>=limit?'已满级':cashPrice(C.trainingCost(r,id)),'train',id,disabled);
+      const star=C.BY_ID[id],own=r.owned[id],limit=C.trainingLimit(r,id),growth=star.tier==='SSR'?4:3,cost=C.trainingCost(r,id);
+      const full=own.train>=limit,used=own.trainedAt===r.stage,disabled=full||used||r.cash<cost;
+      const price=full?'已满级':used?'本关已训练':r.cash<cost?'奖金不足':cashPrice(cost);
+      return shopItem(star.name,`全属性成长 +${growth}% · ${own.train}/${limit}`,price,'train',id,disabled,star.tier,`${star.role} · ${C.LABELS[star.best]}`);
     }).join('');
-    if(shopTab==='boost')content=C.BOOSTS.map(x=>shopItem(x.name,x.description,r.boosts.includes(x.id)?'已持有':cashPrice(x.price),'buy-boost',x.id,r.cash<x.price||r.boosts.length>=3||r.boosts.includes(x.id))).join('');
-    if(shopTab==='gear')content=C.GEAR.map(x=>shopItem(x.name,x.description,r.gear.includes(x.id)?'已装备':cashPrice(x.price),'buy-gear',x.id,r.cash<x.price||r.gear.length>=5||r.gear.includes(x.id))).join('');
-    if(shopTab==='capacity')content=shopItem('备战席扩容','上限由 '+r.benchLimit+' 提升至 '+Math.min(10,r.benchLimit+1)+'；最多 10 位',r.benchLimit>=10?'已满':cashPrice(10),'expand','bench',r.benchLimit>=10||r.cash<10);
+    if(shopTab==='boost'){
+      content=offers.boost.map(id=>{const item=C.BOOSTS.find(x=>x.id===id),bought=r.boosts.filter(boostId=>boostId===id).length,poor=r.cash<item.price;
+        return shopItem(item.name,item.description+(bought?` · 已购 ×${bought}`:''),poor?'奖金不足':cashPrice(item.price),'buy-boost',id,poor,item.rarity,item.type);
+      }).join('');
+    }
+    if(shopTab==='gear'){
+      const kindName={global:'通用',position:'位置',signature:'专属'};
+      equipped=r.gear.length?`<div class="equipped-shelf"><div class="shop-subhead"><b>已装备 ${r.gear.length}/5</b><span>专属装备可换绑 · 出售返还一半奖金</span></div><div>${r.gear.map(id=>{const item=C.GEAR.find(x=>x.id===id),bound=r.gearBindings?.[id],star=C.BY_ID[bound],exclusive=bound&&C.identityOf(bound)===item.exclusivePlayer,active=C.gearMultiplier(r,item)>0;return `<div class="equipped-item"><span>${item.slot} · ${kindName[item.kind]}</span><b>${item.name}</b><small>${item.kind==='signature'?(star?`绑定 ${star.name}${exclusive?' · 专属 +50%':''}${active?'':' · 未上阵'}`:'尚未绑定'):item.description}</small>${item.kind==='signature'?`<button data-act="bind-gear-open" data-id="${id}">更换绑定</button>`:''}<button class="gear-sell" data-act="sell-gear" data-id="${id}">出售 +${item.sellPrice}</button></div>`}).join('')}</div></div>`:'';
+      content=offers.gear.map(id=>{const item=C.GEAR.find(x=>x.id===id),owned=r.gear.includes(id),full=r.gear.length>=5,slotUsed=r.gear.some(gearId=>C.GEAR.find(x=>x.id===gearId)?.slot===item.slot),poor=r.cash<item.price;
+        return shopItem(item.name,item.description,owned?'已装备':slotUsed?'同部位已装备':full?'装备栏已满':poor?'奖金不足':cashPrice(item.price),'buy-gear',id,owned||slotUsed||full||poor,item.rarity,`${item.slot} · ${kindName[item.kind]}`);
+      }).join('');
+    }
+    if(shopTab==='capacity')content=shopItem('备战席扩容',`容量 ${r.benchLimit} → ${Math.min(10,r.benchLimit+1)} · 最多 10 位`,r.benchLimit>=10?'已满':r.cash<10?'奖金不足':cashPrice(10),'expand','bench',r.benchLimit>=10||r.cash<10,'B','阵容管理');
+    if(shopTab==='boost'||shopTab==='gear'){const cost=C.shopRefreshCost(r,shopTab),refreshes=shopTab==='gear'?r.gearRefreshes:r.shopRefreshes;shopTools=`<div class="shop-refresh"><span>${shopTab==='gear'?'装备商店 · 每次展示 3 件':'本关强化'} · 已刷新 ${refreshes} 次</span><button data-act="shop-refresh" ${r.cash<cost?'disabled':''}>${r.cash<cost?'奖金不足':'刷新 · '+cost+' 奖金'}</button></div>`}
     els.shop.innerHTML=`<button class="inline-back" data-act="roster">← 返回融合球场</button><div class="row"><div><div class="eyebrow">LOCKER ROOM</div><h1 class="title">训练与商店</h1></div><span class="pill gold shop-balance"><img src="assets/cash-stack.png" alt="奖金">${r.cash}</span></div>
-      <p class="lead">训练核心、购买装备和赛前强化。当前强化 ${r.boosts.length}/3，装备 ${r.gear.length}/5。</p>
+      <p class="lead">训练核心、挑选本关强化并搭配五个装备部位。强化已购 ${r.boosts.length} 项，装备 ${r.gear.length}/5。</p>
       <div class="tabrow">${tabs.map(([id,name])=>`<button class="tab ${shopTab===id?'active':''}" data-act="shop-tab" data-id="${id}">${name}</button>`).join('')}</div>
-      <div class="shopPanel list">${content||'<div class="emptyline">暂无可训练球星，先去招募吧。</div>'}</div>
-      <p class="footer-note">装备持续整局；赛前强化只对下一场生效。训练、购买后会立即保存。</p>
+      ${equipped}${shopTools}<div class="shopPanel shop-grid">${content||'<div class="emptyline">暂无可用商品或球员。</div>'}</div>
+      <p class="footer-note">装备持续整局；同一部位只能装备一件。赛前强化只对下一场生效。</p>
       <button class="btn wide" data-act="roster">整备完成，返回球场 →</button>`;
   }
   function renderDuel(){
@@ -295,18 +331,31 @@
   let modal=document.createElement('div');modal.id='game-modal';document.body.appendChild(modal);
   function renderPending(){
     const r=game.run,id=r?.pending;
+    if(gearBindId&&r){
+      const item=C.GEAR.find(gear=>gear.id===gearBindId),bound=r.gearBindings?.[gearBindId],players=Object.keys(r.owned);
+      if(!item||item.kind!=='signature'||!r.gear.includes(gearBindId)){gearBindId='';renderPending();return}
+      modal.className='game-modal open';
+      modal.innerHTML=`<div class="modal-card gear-bind-modal"><div class="modal-head"><div><span>球星专属装备</span><h2>${item.name}</h2></div><button data-act="close-gear-bind" aria-label="关闭">×</button></div><p>${item.description}</p><div class="gear-bind-list">${players.map(playerId=>{const star=C.BY_ID[playerId],starter=C.SLOTS.some(slot=>r.slots[slot.id]===playerId),exclusive=C.identityOf(playerId)===item.exclusivePlayer;return `<button class="${bound===playerId?'selected':''}" data-act="bind-gear-player" data-id="${playerId}"><b>${star.name}</b><span>${starter?'已上阵':'备战席'}${exclusive?' · 专属效果 +50%':''}</span></button>`}).join('')}</div></div>`;
+      return;
+    }
     if(!id&&detailStar&&r){
-      const s=C.BY_ID[detailStar],owned=new Set(Object.keys(r.owned).map(C.identityOf));
-      if(!s){detailStar='';renderPending();return}
-      const fits=[...C.ATTRS].sort((a,b)=>s.attrs[b]-s.attrs[a]).slice(0,3);
-      const bonds=C.starSynergies(s.id);
+      const s=C.BY_ID[detailStar],own=r.owned[detailStar],owned=new Set(Object.keys(r.owned).map(C.identityOf));
+      if(!s){detailStar='';detailContext=null;renderPending();return}
+      const effective=own?C.playerEffectiveStats(r,s.id):null,shown=effective?.stats||s.attrs;
+      const fits=[...C.ATTRS].sort((a,b)=>shown[b]-shown[a]).slice(0,3),bonds=C.starSynergies(s.id);
+      const canSell=detailContext?.kind==='bench'&&r.bench[detailContext.key]===s.id&&!r.lastBattle;
+      const assigned=effective?.slot?C.LABELS[effective.slot]+'位':'未上阵';
       modal.className='game-modal open';
       modal.innerHTML=`<div class="modal-card player-detail ${tierClass[s.tier]}">
         <div class="modal-head detail-head"><div><span>${tierName[s.tier]} · 球员详情</span><h2>${s.name}</h2><small>${s.role} · ${s.talent}</small></div><button data-act="close-star-detail" aria-label="关闭">×</button></div>
-        <div class="detail-stats">${C.ATTRS.map(attr=>`<div><span>${C.LABELS[attr]}</span><b>${s.attrs[attr]}</b></div>`).join('')}</div>
-        <section class="detail-section"><span>专属天赋</span><h3>${s.talent}</h3><p>${s.talentEffect.description}。</p></section>
-        <section class="detail-section"><span>位置适配</span><div class="fit-list">${fits.map(attr=>`<b>${C.LABELS[attr]} ${s.attrs[attr]}</b>`).join('')}</div></section>
-        <section class="detail-section"><span>关联羁绊</span><div class="detail-bonds">${bonds.length?bonds.map(bond=>{const count=bond.ids.filter(player=>owned.has(player)).length,active=count===bond.ids.length;return `<div class="${active?'active':''}"><strong>${bond.name}<small>${active?'已激活':`${count}/${bond.ids.length}`}</small></strong><p>${bond.ids.map(player=>`<em class="${owned.has(player)?'owned':''}">${C.BY_ID[player].name}</em>`).join('')}</p><b>${bond.description}</b></div>`}).join(''):'<p>暂无关联羁绊</p>'}</div></section>
+        <div class="detail-scroll">
+          <div class="detail-growth"><b>${own?`${effective.stars}★ · 训练 ${effective.train} 次 · ${assigned}`:'未拥有 · 基础属性'}</b><span>${effective?.effect?'位置适配已激活':'当前位置无专属适配'}</span></div>
+          <div class="detail-stats">${C.ATTRS.map(attr=>`<div><span>${C.LABELS[attr]}</span><b>${shown[attr]}</b>${own&&shown[attr]!==s.attrs[attr]?`<small>基础 ${s.attrs[attr]}</small>`:''}</div>`).join('')}</div>
+          <section class="detail-section"><span>专属天赋</span><h3>${s.talent}</h3><p>${s.talentEffect.description}。</p></section>
+          <section class="detail-section"><span>位置适配</span><div class="fit-list">${fits.map(attr=>`<b>${C.LABELS[attr]} ${shown[attr]}</b>`).join('')}</div></section>
+          <section class="detail-section"><span>关联羁绊</span><div class="detail-bonds">${bonds.length?bonds.map(bond=>{const count=bond.ids.filter(player=>owned.has(player)).length,active=count===bond.ids.length;return `<div class="${active?'active':''}"><strong>${bond.name}<small>${active?'已激活':`${count}/${bond.ids.length}`}</small></strong><p>${bond.ids.map(player=>`<em class="${owned.has(player)?'owned':''}">${C.BY_ID[player].name}</em>`).join('')}</p><b>${bond.description}</b></div>`}).join(''):'<p>暂无关联羁绊</p>'}</div></section>
+          ${canSell?`<button class="detail-sell" data-act="sell-detail" data-index="${detailContext.key}">出售 ${s.name} · 获得 ${C.saleValue(s.id,effective.stars)} 奖金</button>`:''}
+        </div>
       </div>`;
       return;
     }
@@ -394,8 +443,8 @@
     if(action==='shop'){go('shop');return}
     if(action==='duel'){if(C.starterCount(r)<6){notify('先招满六个能力槽');return}go('duel');return}
     if(action==='select-offer'){selectedOffer=id;renderRecruit();return}
-    if(action==='star-detail'){detailStar=id;renderPending();return}
-    if(action==='close-star-detail'){detailStar='';renderPending();return}
+    if(action==='star-detail'){detailStar=id;detailContext={kind:'other'};renderPending();return}
+    if(action==='close-star-detail'){detailStar='';detailContext=null;renderPending();return}
     if(action==='reroll'){if(C.starterCount(r)<6)return;if(!C.refreshOffer(r)){notify('刷新所需奖金不足');return}selectedOffer='';save();renderRecruit();top();return}
     if(action==='pick'){
       const answer=C.recruit(r,selectedOffer);
@@ -413,10 +462,10 @@
       if(!C.resolvePending(r,mode,index))return;
       selectedPlace=null;save();notify(mode==='sell'?'新球星已出售':'备战席已替换');go('roster');return;
     }
-    if(action==='sell-bench'){
+    if(action==='sell-detail'){
       const index=Number(button.dataset.index),name=C.BY_ID[r.bench[index]]?.name,value=C.sellBench(r,index);
       if(!value)return;
-      selectedPlace=null;save();renderRoster();top();notify(`${name} 已出售，获得 ${value} 奖金`);return;
+      detailStar='';detailContext=null;selectedPlace=null;save();renderPending();renderRoster();top();notify(`${name} 已出售，获得 ${value} 奖金`);return;
     }
     if(action==='bonds'){showBonds=true;renderPending();return}
     if(action==='close-bonds'){showBonds=false;renderPending();return}
@@ -424,13 +473,18 @@
       const place=placeFromElement(button);
       if(!place||!r)return;
       const playerId=place.kind==='slot'?r.slots[place.key]:r.bench[place.key];
-      if(playerId){detailStar=playerId;renderPending()}
+      if(playerId){detailStar=playerId;detailContext=place;renderPending()}
       return;
     }
     if(action==='shop-tab'){shopTab=id;renderShop();return}
     if(action==='train'){if(C.train(r,id)){save();renderShop();top();notify('训练完成')}else notify('本关已训练、已满级或奖金不足');return}
-    if(action==='buy-boost'){if(C.buyBoost(r,id)){save();renderShop();top();notify('赛前强化已生效')}else notify('奖金不足或强化栏已满');return}
-    if(action==='buy-gear'){if(C.buyGear(r,id)){save();renderShop();top();notify('装备已加入阵容')}else notify('奖金不足或装备栏已满');return}
+    if(action==='buy-boost'){if(C.buyBoost(r,id)){save();renderShop();top();notify('赛前强化已生效')}else notify('奖金不足或商品已刷新');return}
+    if(action==='buy-gear'){if(C.buyGear(r,id)){save();renderShop();top();notify('装备已加入阵容')}else notify('奖金不足、装备栏已满或同部位已装备');return}
+    if(action==='bind-gear-open'){gearBindId=id;renderPending();return}
+    if(action==='close-gear-bind'){gearBindId='';renderPending();return}
+    if(action==='bind-gear-player'){if(C.bindGear(r,gearBindId,id)){gearBindId='';save();renderPending();renderShop();top();notify('装备绑定已更新')}return}
+    if(action==='sell-gear'){const value=C.sellGear(r,id);if(value){save();renderShop();top();notify('装备已出售')}return}
+    if(action==='shop-refresh'){if(C.refreshShop(r,shopTab)){save();renderShop();top();notify('商店商品已刷新')}else notify('刷新所需奖金不足');return}
     if(action==='expand'){if(C.expandBench(r)){save();renderShop();top();notify('备战席容量 +1')}else notify('奖金不足或容量已达上限');return}
     if(action==='strategy'){strategy=id;renderDuel();return}
     if(action==='battle'){const report=C.battle(game,strategy);if(!report){notify('当前无法开始对战');return}save();go('result');return}

@@ -50,7 +50,7 @@ test('all cards use six attributes and obey their tier ceilings', () => {
   assert.equal(C.LABELS.post, undefined);
   assert.equal(C.LABELS.rebound, undefined);
   const ceilings = { C: 81, B: 88, A: 89, S: 99, SSR: 128 };
-  const mainFloors = { C: 78, B: 83, A: 89, S: 95, SSR: 120 };
+  const mainFloors = { C: 78, B: 83, A: 80, S: 95, SSR: 120 };
   for (const star of C.STARS) {
     assert.deepEqual(Object.keys(star.attrs), C.ATTRS);
     assert.ok(Object.values(star.attrs).every(value => value <= ceilings[star.tier]));
@@ -81,7 +81,7 @@ test('all cards use six attributes and obey their tier ceilings', () => {
   assert.equal(C.BY_ID.benwallace.tier, 'B');
   assert.equal(C.BY_ID.benwallace.best, 'def');
   assert.equal(C.BY_ID.benwallace.attrs.def, 88);
-  for (const [tier, expected] of [['C', [78, 81]], ['B', [83, 88]], ['A', [89, 89]], ['S', [95, 99]], ['SSR', [120, 128]]]) {
+  for (const [tier, expected] of [['C', [78, 81]], ['B', [83, 88]], ['A', [80, 89]], ['S', [95, 99]], ['SSR', [120, 128]]]) {
     const scores = C.STARS.filter(star => star.tier === tier).map(star => star.attrs[star.best]);
     assert.deepEqual([Math.min(...scores), Math.max(...scores)], expected);
   }
@@ -262,10 +262,10 @@ test('the six mandatory opening drafts exclude recruited players', () => {
 test('draft rarity matches the reference stage tables and keeps SSR group-based', () => {
   const run = C.createRun('outside', 11);
   const early = C.tierOdds(run);
-  assert.deepEqual(early, { C: 44, B: 28, A: 26, S: 2, SSR: 0.8 });
+  assert.deepEqual(early, { C: 45, B: 29, A: 25, S: 1, SSR: 0.8 });
   run.offer = [];
   run.recruitGroups = 6;
-  assert.deepEqual(C.tierOdds(run), { C: 43, B: 29, A: 24, S: 4, SSR: 0.8 });
+  assert.deepEqual(C.tierOdds(run), { C: 45, B: 30, A: 23, S: 2, SSR: 0.8 });
   run.stage = 5;
   assert.deepEqual(C.tierOdds(run), { C: 27, B: 27, A: 40, S: 6, SSR: 0.8 });
   run.stage = 8;
@@ -357,7 +357,7 @@ test('percentage talents scale after star and training growth and only activate 
   effect.stats.three = 0;
   const withoutTalent = C.fused(run).stats.three;
   effect.stats.three = original;
-  assert.equal(C.fused(run).stats.three, Math.min(150, Math.round(withoutTalent * 1.14)));
+  assert.equal(C.fused(run).stats.three, Math.round(withoutTalent * 1.14));
   C.swapPositions(run, { kind: 'slot', key: 'three' }, { kind: 'slot', key: 'mid' });
   assert.ok(!C.fused(run).talents.some(star => star.id === 'curry'));
 });
@@ -378,6 +378,55 @@ test('S talents match the approved reference-style roles and mechanics', () => {
   assert.deepEqual(C.BY_ID.kareem.talentEffect.slotEffects.def.stats, { def: 8, three: -4 });
   assert.equal(C.BY_ID.hakeem.talentEffect.slotEffects.inside.postBattleCash, 2);
   assert.equal(C.BY_ID.russell.talentEffect.stats.def, 12);
+});
+
+test('effective player attributes expose star training and slot adaptation without a hard cap', () => {
+  const run = C.createRun('agent', 303);
+  run.offer = [];
+  run.owned.curry = { stars: 2, train: 1, trainedAt: 0 };
+  run.slots.three = 'curry';
+  const grown = Math.round(C.BY_ID.curry.attrs.three * 1.13);
+  assert.equal(C.playerEffectiveStats(run, 'curry').stats.three, Math.round(grown * 1.14));
+  run.owned.curry.stars = 20;
+  run.owned.curry.train = 20;
+  assert.ok(C.playerEffectiveStats(run, 'curry').stats.three > 150);
+  assert.ok(C.fused(run).stats.three > 150);
+});
+
+test('battle income follows reference victory loss and interest rules', () => {
+  const run = C.createRun('outside', 404);
+  run.cash = 44;
+  assert.deepEqual(C.incomeBreakdown(run), { victoryBase: 4, lossBase: 7, lineupIncome: 0, interest: 2, interestCap: 3 });
+  run.stage = 5;
+  assert.equal(C.incomeBreakdown(run).victoryBase, 6);
+  run.stage = 10;
+  assert.equal(C.incomeBreakdown(run).victoryBase, 0);
+  run.stage = 13;
+  assert.equal(C.incomeBreakdown(run).victoryBase, 10);
+});
+
+test('recruit probability summary uses the same odds and labels group chances explicitly', () => {
+  const run = C.createRun('outside', 505);
+  const odds = C.tierOdds(run), summary = C.recruitProbabilitySummary(run);
+  assert.equal(summary.S, odds.S);
+  assert.equal(summary.SSR, odds.SSR);
+  assert.equal(summary.ssrGroup, 0.8);
+  assert.ok(Math.abs(summary.sGroup - (100 * (1 - Math.pow(0.99, 4)))) < 1e-9);
+});
+
+test('offer probability snapshot stays tied to the displayed four-choice group', () => {
+  const run = C.createRun('outside', 506);
+  assert.equal(run.offerOdds.S, 1);
+  run.offer = [];
+  run.offerOdds = null;
+  run.recruitGroups = 6;
+  run.noSPlusGroups = 6;
+  const expected = C.recruitProbabilitySummary(run);
+  C.makeOffer(run);
+  assert.deepEqual(run.offerOdds, expected);
+  assert.equal(run.offer.length, 4);
+  assert.equal(C.recruit(run, run.offer[0]).ok, true);
+  assert.equal(run.offerOdds, null);
 });
 
 test('Magic Johnson reduces paid recruitment while assigned to the control slot', () => {
@@ -541,6 +590,127 @@ test('training is limited to once per stage and battle rewards cannot be claimed
     assert.equal(run.lastBattle, null);
   }
   assert.ok(Buffer.byteLength(JSON.stringify(game)) < 200000);
+});
+
+test('boost and equipment shops keep their independent reference refresh rules', () => {
+  const run = C.createRun('outside', 707);
+  assert.equal(run.shopOffers.boost.length, 4);
+  assert.equal(run.shopOffers.gear.length, 3);
+  assert.equal(new Set(run.shopOffers.boost).size, 4);
+  assert.equal(new Set(run.shopOffers.gear).size, 3);
+  run.cash = 30;
+  assert.equal(C.shopRefreshCost(run, 'boost'), 4);
+  assert.equal(C.refreshShop(run, 'boost'), true);
+  assert.equal(run.cash, 26);
+  assert.equal(run.shopRefreshes, 1);
+  assert.equal(C.shopRefreshCost(run, 'boost'), 5);
+  assert.equal(C.shopRefreshCost(run, 'gear'), 3);
+  assert.equal(C.refreshShop(run, 'gear'), true);
+  assert.equal(run.cash, 23);
+  assert.equal(run.gearRefreshes, 1);
+  assert.equal(run.shopOffers.gear.length, 3);
+});
+
+test('boosts stack additively as percentages without a purchase-count limit', () => {
+  const run = draftedRun(709);
+  run.cash = 200;
+  run.shopOffers.boost = ['hot', 'paint', 'stopper', 'rhythm'];
+  const baseThree = C.fused(run).stats.three;
+  for (let i = 0; i < 5; i++) assert.equal(C.buyBoost(run, 'hot'), true);
+  assert.equal(run.boosts.length, 5);
+  assert.equal(C.fused(run).stats.three, Math.round(baseThree * 1.4));
+  assert.ok(run.shopOffers.boost.includes('hot'));
+});
+
+test('shop refresh price rises by one and remains capped at ten', () => {
+  const run = C.createRun('outside', 710);
+  run.cash = 200;
+  assert.deepEqual(Array.from({ length: 9 }, () => {
+    const cost = C.shopRefreshCost(run);
+    assert.equal(C.refreshShop(run), true);
+    return cost;
+  }), [4, 5, 6, 7, 8, 9, 10, 10, 10]);
+});
+test('equipment shop uses the reference rarity weights at every stage', () => {
+  const run = C.createRun('outside', 713);
+  assert.deepEqual(C.gearRarityWeights(run), { C: 70, A: 24, S: 6, SR: 1 });
+  run.stage = 10;
+  assert.deepEqual(C.gearRarityWeights(run), { C: 70, A: 24, S: 6, SR: 1 });
+});
+
+test('gear catalog exactly mirrors reference counts qualities routes and prices', () => {
+  assert.equal(C.GEAR.length, 42);
+  assert.deepEqual(
+    Object.fromEntries(['global', 'position', 'signature'].map(kind => [kind, C.GEAR.filter(item => item.kind === kind).length])),
+    { global: 10, position: 7, signature: 25 }
+  );
+  assert.deepEqual(
+    Object.fromEntries(['C', 'A', 'S', 'SR'].map(rarity => [rarity, C.GEAR.filter(item => item.rarity === rarity).length])),
+    { C: 6, A: 19, S: 13, SR: 4 }
+  );
+  assert.ok(C.GEAR.every(item => item.sellPrice > 0 && item.sellPrice < item.price));
+  assert.ok(C.GEAR.every(item => ['护腕', '球鞋', '头带', '球衣', '戒指'].includes(item.slot)));
+  assert.ok(C.GEAR.filter(item => item.exclusivePlayer).every(item => C.BY_ID[item.exclusivePlayer]));
+  assert.deepEqual([C.GEAR.find(item => item.id === 'dynasty_ring').price, C.GEAR.find(item => item.id === 'dynasty_ring').sellPrice], [50, 20]);
+});
+
+test('gear keeps exclusive body slots and uses the reference sell price', () => {
+  const run = C.createRun('outside', 708);
+  run.cash = 100;
+  run.shopOffers.gear = ['wrist', 'sleeve', 'paint_shoes'];
+  const baseDrive = C.fused(run).stats.drive;
+  assert.equal(C.buyGear(run, 'wrist'), true);
+  assert.equal(C.buyGear(run, 'sleeve'), false);
+  assert.equal(C.buyGear(run, 'paint_shoes'), true);
+  assert.equal(C.fused(run).stats.drive, Math.round(baseDrive * 1.05));
+  const beforeSale = run.cash;
+  assert.equal(C.sellGear(run, 'wrist'), 4);
+  assert.equal(run.cash, beforeSale + 4);
+  assert.equal(C.buyGear(run, 'sleeve'), true);
+});
+
+test('position gear applies percentages only while its ability slot is occupied', () => {
+  const run = draftedRun(711);
+  run.cash = 100;
+  run.shopOffers.gear = ['tactics_board'];
+  const baseThree = C.fused(run).stats.three;
+  assert.equal(C.buyGear(run, 'tactics_board'), true);
+  assert.equal(C.fused(run).stats.three, Math.round(baseThree * 1.1));
+  run.slots.three = null;
+  assert.equal(C.gearMultiplier(run, C.GEAR.find(item => item.id === 'tactics_board')), 0);
+});
+
+test('signature gear can be rebound and gains fifty percent on its exclusive star', () => {
+  const run = C.createRun('outside', 712);
+  run.offer = [];
+  const ids = ['curry', 'kobe', 'jordan', 'lebron', 'shaq', 'magic'];
+  ids.forEach((id, index) => {
+    run.owned[id] = { stars: 1, train: 0, trainedAt: 0 };
+    run.slots[C.SLOTS[index].id] = id;
+  });
+  run.cash = 100;
+  run.shopOffers.gear = ['curry_wrist'];
+  const baseThree = C.fused(run).stats.three;
+  assert.equal(C.buyGear(run, 'curry_wrist'), true);
+  assert.equal(run.gearBindings.curry_wrist, 'curry');
+  assert.equal(C.fused(run).stats.three, baseThree + 11);
+  assert.equal(C.bindGear(run, 'curry_wrist', 'kobe'), true);
+  assert.equal(C.fused(run).stats.three, baseThree + 7);
+  run.bench.push('kobe');
+  run.slots.mid = null;
+  assert.equal(C.gearMultiplier(run, C.GEAR.find(item => item.id === 'curry_wrist')), 0);
+});
+
+test('shop screen renders training boosts and gear in a two-column grid', () => {
+  const html = fs.readFileSync(path.join(__dirname, '../h5/index.html'), 'utf8');
+  const ui = fs.readFileSync(path.join(__dirname, '../h5/game-ui.js'), 'utf8');
+  assert.match(html, /\.shop-grid\{display:grid;grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+  assert.match(ui, /<div class="shopPanel shop-grid">/);
+  assert.match(ui, /data-act="shop-refresh"/);
+  assert.match(ui, /data-act="sell-gear"/);
+  assert.match(ui, /data-act="bind-gear-open"/);
+  assert.match(ui, /data-act="bind-gear-player"/);
+  assert.match(html, /\.shop-tier-sr/);
 });
 
 test('strategy counter is awarded to the correct side', () => {
